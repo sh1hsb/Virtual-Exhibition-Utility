@@ -42,7 +42,7 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2964191933255606367}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 2.5
@@ -110,9 +110,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraController: {fileID: 0}
-  mainPopupObject: {fileID: 0}
+  mainPopupUI: {fileID: 0}
+  popupPosition: 0
   AppearObjects: []
-  isActive: 0
+  onPopup:
+    m_PersistentCalls:
+      m_Calls: []
+  onDisappear:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &7098263310511969102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -127,5 +133,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetCamera: {fileID: 0}
   detectDistance: 4
-  spriteRenderer: {fileID: 2964191933255606365}
-  cldr: {fileID: 2964191933255606366}
+  manageRenderer: 1
+  manageCollider: 1
+  onUserDetect:
+    m_PersistentCalls:
+      m_Calls: []
+  onUserLost:
+    m_PersistentCalls:
+      m_Calls: []
+  renderers: []
+  colliders: []
+  isDetected: 0

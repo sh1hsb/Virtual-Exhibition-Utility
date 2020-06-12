@@ -41,7 +41,7 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 295087495077898252}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 2.5
@@ -110,5 +110,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetCamera: {fileID: 0}
   detectDistance: 4
-  spriteRenderer: {fileID: 295087495077899251}
-  cldr: {fileID: 295087495077899250}
+  manageRenderer: 1
+  manageCollider: 1
+  onUserDetect:
+    m_PersistentCalls:
+      m_Calls: []
+  onUserLost:
+    m_PersistentCalls:
+      m_Calls: []
+  renderers: []
+  colliders: []
+  isDetected: 0

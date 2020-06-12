@@ -96,7 +96,12 @@ public class UserControlManager : MonoBehaviour
         {
             // 移動目標の位置を現在の位置に設定しておく
             cameraPosition = targetCamera.transform.position;
-        }    
+        }
+        
+        foreach(GameObject obj in movePointObjects)
+        {
+            obj.transform.tag = movePointObjectTag;
+        }
     }
 
     void Update()
@@ -205,14 +210,14 @@ public class UserControlManager : MonoBehaviour
                             {
                                 controlState = ControlState.PopupEvent;
                                 currentPopupEvent.Popup();
-                                Debug.Log("Popup Start");
+                                //Debug.Log("Popup Start");
                             }
                             // 取得できなかった場合はCameraControlと同様の処理を行う
                             else
                             {
                                 controlState = ControlState.CameraControl;
                                 cameraAngle = targetCamera.transform.localEulerAngles;
-                                Debug.Log("Camera Control Start (No Popup)");
+                                //Debug.Log("Camera Control Start (No Popup)");
                             }
                         }
                         // タグなし
@@ -220,14 +225,14 @@ public class UserControlManager : MonoBehaviour
                         {
                             controlState = ControlState.CameraControl;
                             cameraAngle = targetCamera.transform.localEulerAngles;
-                            Debug.Log("Camera Control Start (No tag)");
+                            //Debug.Log("Camera Control Start (No tag)");
                         }
                     }
                     else
                     {
                         controlState = ControlState.CameraControl;
                         cameraAngle = targetCamera.transform.localEulerAngles;
-                        Debug.Log("Camera Control Start (No Hit)");
+                        //Debug.Log("Camera Control Start (No Hit)");
                     }
 
                     // カーソル位置を取得し初期値とする
@@ -242,20 +247,20 @@ public class UserControlManager : MonoBehaviour
                     cameraAngle = targetCamera.transform.localEulerAngles;
                     initialMousePosition = cursorPosition;
                     lastMousePosition = cursorPosition;
-                    Debug.Log("Camera Control Start (Moving)");
+                    //Debug.Log("Camera Control Start (Moving)");
                 }
 
                 // ポップアップ時はUI上でない場所でクリックするとポップアップ解除
                 // タッチ時UI外を2回タップしないと解除できないのでそこは要検討
                 else if (controlState == ControlState.PopupEvent && isNotPointerOverUI)
                 {
-                    Debug.Log("Popup End?");
+                    //Debug.Log("Popup End?");
 
                     if (currentPopupEvent != null)
                     {
                         currentPopupEvent.Disappear();
                         ResetState();
-                        Debug.Log("Popup Dissapear");
+                        //Debug.Log("Popup Dissapear");
                     }                }
             }
 
@@ -307,7 +312,7 @@ public class UserControlManager : MonoBehaviour
                     case ControlState.CameraControl:
 
                         // 移動位置を設定
-                        Debug.Log("camera pos update? (camera control)");
+                        //Debug.Log("camera pos update? (camera control)");
 
                         switch (clickMoveType)
                         {
@@ -317,7 +322,7 @@ public class UserControlManager : MonoBehaviour
                                     // カメラ位置を更新
                                     cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
 
-                                    Debug.Log("camera pos update (camera control)");
+                                    //Debug.Log("camera pos update (camera control)");
                                 }
                                 break;
 
@@ -372,7 +377,7 @@ public class UserControlManager : MonoBehaviour
                                             cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
                                         }
 
-                                        Debug.Log("camera pos update (to closest point)");
+                                        //Debug.Log("camera pos update (to closest point)");
                                     }
                                 }
                                 break;
@@ -388,7 +393,7 @@ public class UserControlManager : MonoBehaviour
                         // 移動位置を設定
                         if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
                         {
-                            Debug.Log("camera pos update? (move to point)");
+                            //Debug.Log("camera pos update? (move to point)");
 
                             if (hitTransform != null)
                             {
@@ -408,13 +413,13 @@ public class UserControlManager : MonoBehaviour
                                     cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
                                 }
 
-                                Debug.Log("camera pos update (move to point)");
+                                //Debug.Log("camera pos update (move to point)");
                             }
                         }
                         else
                         {
                             controlState = ControlState.None;
-                            Debug.Log("camera pos no update (move to point)");
+                            //Debug.Log("camera pos no update (move to point)");
                         }
                         break;
 
@@ -480,6 +485,23 @@ public class UserControlManager : MonoBehaviour
         }
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Debug.Log("Collision");
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(CheckCollideObjectIsNotEventObject(other))
+        {
+            Debug.Log("Trigger object...");
+        }
+        else
+        {
+            Debug.Log("Trigger event object.");
+        }
+    }
+
     public void ResetState()
     {
         controlState = ControlState.None;
@@ -499,5 +521,17 @@ public class UserControlManager : MonoBehaviour
     public void MoveTo(Vector3 position)
     {
         cameraPosition = position;
+    }
+
+    private bool CheckCollideObjectIsNotEventObject(Collider other)
+    {
+        if(other.gameObject.transform.CompareTag(movePointObjectTag) || other.gameObject.transform.CompareTag(popupEventObjectTag))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 }
