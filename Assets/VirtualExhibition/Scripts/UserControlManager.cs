@@ -29,6 +29,13 @@ public class UserControlManager : MonoBehaviour
         Multi
     }
 
+    public enum ClickMoveType
+    {
+        None,
+        Freewalk,
+        ToClosestPoint
+    }
+
     public ControlState controlState = ControlState.None;
 
     [Header("Camera Control Setting")]
@@ -38,9 +45,12 @@ public class UserControlManager : MonoBehaviour
     public bool reverseRotationHorizontal;
     public bool reverseRotationVertical;
     [Space(10)]
-    public bool enableFreewalk;
+    //public bool enableFreewalk;
+    public ClickMoveType clickMoveType = ClickMoveType.None;
     public float moveRate = 1f;
     [Range(0f, 1f)] public float moveSmoothing = 0.1f;
+    public float closestPointDetectDistance = 5.0f;
+    public List<GameObject> movePointObjects;
     [Space(10)]
     public float fovRate = 10f;
     public float fovPinchRate = 0.05f;
@@ -62,11 +72,16 @@ public class UserControlManager : MonoBehaviour
     RaycastHit hit;
     Transform hitTransform;
 
+    private GameObject lastClosestPointObject;
+
     private PopupEventInvoker currentPopupEvent;
 
     private float touchDistanceDelta;
     private float lastTouchDistance;
     private bool multiTouchEngaged;
+
+
+    public GameObject debugObject;
 
     public bool IsEventInvoked
     {
@@ -147,7 +162,10 @@ public class UserControlManager : MonoBehaviour
             Ray ray = targetCamera.ScreenPointToRay(cursorPosition);
             Debug.DrawRay(ray.origin, ray.direction * 10f, Color.red, 3.0f);
 
-            // 
+
+            // --------------------------------------------------
+            // 左クリック or シングルタップ開始
+            // --------------------------------------------------
             if ((touchState == TouchState.Single && touchPhase == TouchPhase.Began) || Input.GetMouseButtonDown(0))
             {
                 // UI上にポインタがあるかどうかチェック
@@ -241,6 +259,10 @@ public class UserControlManager : MonoBehaviour
                         Debug.Log("Popup Dissapear");
                     }                }
             }
+
+            // --------------------------------------------------
+            // 左クリック or シングルタップ継続
+            // --------------------------------------------------
             else if ((touchState == TouchState.Single && (touchPhase == TouchPhase.Moved || touchPhase == TouchPhase.Stationary)) || (touchState != TouchState.Multi && Input.GetMouseButton(0)))
             {
                 switch (controlState)
@@ -275,6 +297,10 @@ public class UserControlManager : MonoBehaviour
                     lastMousePosition = cursorPosition;
                 }  
             }
+
+            // --------------------------------------------------
+            // 左クリック or シングルタップ終了
+            // --------------------------------------------------
             else if ((touchState == TouchState.Single && (touchPhase == TouchPhase.Ended || touchPhase == TouchPhase.Canceled)) || Input.GetMouseButtonUp(0))
             {
                 switch (controlState)
@@ -284,11 +310,49 @@ public class UserControlManager : MonoBehaviour
                         // 移動位置を設定
                         Debug.Log("camera pos update? (camera control)");
 
-                        if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && enableFreewalk)
+                        switch (clickMoveType)
                         {
-                            cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
-                            Debug.Log("camera pos update (camera control)");
+                            case ClickMoveType.Freewalk:
+                                if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
+                                {
+                                    cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
+                                    Debug.Log("camera pos update (camera control)");
+                                }
+                                break;
+
+                            case ClickMoveType.ToClosestPoint:
+
+                                if(Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && movePointObjects.Count > 0)
+                                {
+                                    Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestPointDetectDistance;
+
+                                    GameObject target = null;
+                                    float minDistance = 100f;
+
+                                    foreach(GameObject obj in movePointObjects)
+                                    {
+                                        float dist = Vector3.Distance(detectOrigin, obj.transform.position);
+
+                                        if (dist < minDistance && (lastClosestPointObject == null || (lastClosestPointObject != null && lastClosestPointObject != obj)) && Vector3.Dot(targetCamera.transform.position + ray.direction, targetCamera.transform.position + obj.transform.position) > 0.5f)
+                                        {
+                                            minDistance = dist;
+                                            target = obj;
+                                            lastClosestPointObject = obj;
+                                        }
+                                    }
+
+                                    if(target != null)
+                                    {
+                                        cameraPosition = new Vector3(target.transform.position.x, targetCamera.transform.position.y, target.transform.position.z);
+                                        Debug.Log("camera pos update (to closest point)");
+                                    }
+                                }
+                                break;
+
+                            default:
+                                break;
                         }
+
                         break;
 
                     case ControlState.MoveToPoint:
@@ -330,22 +394,16 @@ public class UserControlManager : MonoBehaviour
             {
                 targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, cameraPosition, moveSmoothing);
 
-                //Debug.Log("Moving..");
-
                 // 目的地に到着したら
                 if(Vector3.Distance(targetCamera.transform.position, cameraPosition) <= 0.01f)
                 {
                     targetCamera.transform.position = cameraPosition;
-
-                    //Debug.Log("Move end");
 
                     // 移動完了前にクリックしていた場合に状態が切り替わらないため、ここでCameraControlに状態変更する
                     if (controlState == ControlState.MoveToPoint)
                     {
                         //controlState = ControlState.None;
                         controlState = ControlState.CameraControl;
-
-                        //Debug.Log("Move end and state to cc");
                     }
                 }
             }
