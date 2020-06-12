@@ -50,7 +50,8 @@ public class UserControlManager : MonoBehaviour
     public float moveRate = 1f;
     [Range(0f, 1f)] public float moveSmoothing = 0.1f;
     public bool lookAtMovePointOnMove;
-    [Range(0f, 1f)] public float forwardObjectDetectThreshold = 0.5f;
+    public float closestMovePointDetectOriginDistance = 3.0f;
+    [Range(0f, 1f)] public float forwardMovePointDetectThreshold = 0.5f;
     public List<GameObject> movePointObjects;
     [Space(10)]
     public float fovRate = 10f;
@@ -330,6 +331,8 @@ public class UserControlManager : MonoBehaviour
 
                                 if(Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && movePointObjects.Count > 0)
                                 {
+                                    Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestMovePointDetectOriginDistance;
+
                                     GameObject target = null;
                                     float minDistance = 100f;
 
@@ -343,10 +346,10 @@ public class UserControlManager : MonoBehaviour
                                         }
 
                                         // オブジェクトまでの距離を計算
-                                        float dist = Vector3.Distance(targetCamera.transform.position, obj.transform.position);
+                                        float dist = Vector3.Distance(detectOrigin, obj.transform.position);
 
                                         // 距離が近く、カメラの前方にあればターゲット判定する
-                                        if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardObjectDetectThreshold)
+                                        if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardMovePointDetectThreshold)
                                         {
                                             minDistance = dist;
                                             target = obj;
