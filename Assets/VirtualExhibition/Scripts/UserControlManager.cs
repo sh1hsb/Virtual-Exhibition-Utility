@@ -45,11 +45,12 @@ public class UserControlManager : MonoBehaviour
     public bool reverseRotationHorizontal;
     public bool reverseRotationVertical;
     [Space(10)]
-    //public bool enableFreewalk;
+    
     public ClickMoveType clickMoveType = ClickMoveType.None;
     public float moveRate = 1f;
     [Range(0f, 1f)] public float moveSmoothing = 0.1f;
-    public float closestPointDetectDistance = 5.0f;
+    public bool lookAtMovePointOnMove;
+    [Range(0f, 1f)] public float forwardObjectDetectThreshold = 0.5f;
     public List<GameObject> movePointObjects;
     [Space(10)]
     public float fovRate = 10f;
@@ -68,6 +69,7 @@ public class UserControlManager : MonoBehaviour
     private Vector2 objectAngle;
     private Vector2 initialMousePosition;
     private Vector2 lastMousePosition;
+    private Quaternion cameraPose;
 
     RaycastHit hit;
     Transform hitTransform;
@@ -79,9 +81,6 @@ public class UserControlManager : MonoBehaviour
     private float touchDistanceDelta;
     private float lastTouchDistance;
     private bool multiTouchEngaged;
-
-
-    public GameObject debugObject;
 
     public bool IsEventInvoked
     {
@@ -315,7 +314,9 @@ public class UserControlManager : MonoBehaviour
                             case ClickMoveType.Freewalk:
                                 if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
                                 {
+                                    // カメラ位置を更新
                                     cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
+
                                     Debug.Log("camera pos update (camera control)");
                                 }
                                 break;
@@ -324,26 +325,53 @@ public class UserControlManager : MonoBehaviour
 
                                 if(Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && movePointObjects.Count > 0)
                                 {
-                                    Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestPointDetectDistance;
-
                                     GameObject target = null;
                                     float minDistance = 100f;
 
-                                    foreach(GameObject obj in movePointObjects)
+                                    // 登録されたオブジェクトとの距離を計測
+                                    foreach (GameObject obj in movePointObjects)
                                     {
-                                        float dist = Vector3.Distance(detectOrigin, obj.transform.position);
+                                        // 最後に移動した地点のオブジェクトは飛ばす
+                                        if(lastClosestPointObject != null && obj == lastClosestPointObject)
+                                        {
+                                            continue;
+                                        }
 
-                                        if (dist < minDistance && (lastClosestPointObject == null || (lastClosestPointObject != null && lastClosestPointObject != obj)) && Vector3.Dot(targetCamera.transform.position + ray.direction, targetCamera.transform.position + obj.transform.position) > 0.5f)
+                                        // オブジェクトまでの距離を計算
+                                        float dist = Vector3.Distance(targetCamera.transform.position, obj.transform.position);
+
+                                        // 距離が近く、カメラの前方にあればターゲット判定する
+                                        if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardObjectDetectThreshold)
                                         {
                                             minDistance = dist;
                                             target = obj;
-                                            lastClosestPointObject = obj;
                                         }
                                     }
 
                                     if(target != null)
                                     {
+                                        // 移動ターゲットを更新
+                                        lastClosestPointObject = target;
+
+                                        // 状態をMoveToPointに更新する
+                                        controlState = ControlState.MoveToPoint;
+
+                                        // カメラ位置を更新
                                         cameraPosition = new Vector3(target.transform.position.x, targetCamera.transform.position.y, target.transform.position.z);
+
+                                        // 移動方向を向く
+                                        if (lookAtMovePointOnMove)
+                                        {
+                                            // 目的の方向へ向くための回転を計算
+                                            Vector3 targetRot = Quaternion.LookRotation(target.transform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
+
+                                            // 現在の姿勢を取得
+                                            Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
+
+                                            // Y軸のみを回転するようにする
+                                            cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
+                                        }
+
                                         Debug.Log("camera pos update (to closest point)");
                                     }
                                 }
@@ -364,7 +392,22 @@ public class UserControlManager : MonoBehaviour
 
                             if (hitTransform != null)
                             {
+                                // カメラ位置を更新
                                 cameraPosition = new Vector3(hitTransform.position.x, targetCamera.transform.position.y, hitTransform.position.z);
+
+                                // 移動方向を向く
+                                if (lookAtMovePointOnMove)
+                                {
+                                    // 目的の方向へ向くための回転を計算
+                                    Vector3 targetRot = Quaternion.LookRotation(hitTransform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
+
+                                    // 現在の姿勢を取得
+                                    Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
+
+                                    // Y軸のみを回転するようにする
+                                    cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
+                                }
+
                                 Debug.Log("camera pos update (move to point)");
                             }
                         }
@@ -389,10 +432,17 @@ public class UserControlManager : MonoBehaviour
                 }
             }
 
-            // カメラの位置を動かす
+            // カメラの位置・姿勢を更新
             if(Vector3.Distance(targetCamera.transform.position, cameraPosition) > 0.01f)
             {
+                // 位置を更新
                 targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, cameraPosition, moveSmoothing);
+
+                // 姿勢を更新
+                if(controlState == ControlState.MoveToPoint && lookAtMovePointOnMove)
+                {
+                    targetCamera.transform.rotation = Quaternion.Lerp(targetCamera.transform.rotation, cameraPose, 0.1f);
+                }
 
                 // 目的地に到着したら
                 if(Vector3.Distance(targetCamera.transform.position, cameraPosition) <= 0.01f)

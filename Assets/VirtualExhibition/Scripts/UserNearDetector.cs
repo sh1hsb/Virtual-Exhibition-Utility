@@ -50,7 +50,7 @@ public class UserNearDetector : MonoBehaviour
 
                 onUserDetect?.Invoke();
 
-                Debug.Log("User Detect");
+                //Debug.Log("User Detect");
             }
             else if(distance > detectDistance && isDetected)
             {
@@ -58,7 +58,7 @@ public class UserNearDetector : MonoBehaviour
 
                 onUserLost?.Invoke();
 
-                Debug.Log("User Lost");
+                //Debug.Log("User Lost");
             }
         }
     }
