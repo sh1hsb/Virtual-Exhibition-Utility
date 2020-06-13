@@ -33,7 +33,7 @@ public class UserControlManager : MonoBehaviour
     {
         None,
         Freewalk,
-        ToClosestPoint
+        ToClosestAutoMovePoint
     }
 
     public ControlState controlState = ControlState.None;
@@ -41,23 +41,28 @@ public class UserControlManager : MonoBehaviour
     [Header("Camera Control Setting")]
     public Camera targetCamera;
     [Space(10)]
+
     public Vector2 rotationSpeed = new Vector2(0.05f, 0.05f);
     public bool reverseRotationHorizontal;
     public bool reverseRotationVertical;
     [Space(10)]
-    
+
     public ClickMoveType clickMoveType = ClickMoveType.None;
     public float moveRate = 1f;
     [Range(0f, 1f)] public float moveSmoothing = 0.1f;
     public bool lookAtMovePointOnMove;
-    public float closestMovePointDetectOriginDistance = 3.0f;
-    [Range(0f, 1f)] public float forwardMovePointDetectThreshold = 0.5f;
-    public List<GameObject> movePointObjects;
+    public float closestAutoMovePointDetectOriginDistance = 3.0f;
+    [Range(0f, 1f)] public float forwardClosestAutoMovePointDetectRange = 0.5f;
+    public List<GameObject> autoMovePointObjects;
     [Space(10)]
+
     public float fovRate = 10f;
     public float fovPinchRate = 0.05f;
     public float fovMin = 30f;
     public float fovMax = 80f;
+    [Space(10)]
+
+    public float wallBoundValue = 0.5f;
 
     [Header("Tags")]
     public string controllableObjectTag = "ControllableObject";
@@ -71,6 +76,9 @@ public class UserControlManager : MonoBehaviour
     private Vector2 initialMousePosition;
     private Vector2 lastMousePosition;
     private Quaternion cameraPose;
+    [SerializeField]private Vector3 moveVector;
+    private Vector3 boundDirection;
+    private bool isBounded;
 
     RaycastHit hit;
     Transform hitTransform;
@@ -99,7 +107,7 @@ public class UserControlManager : MonoBehaviour
             cameraPosition = targetCamera.transform.position;
         }
         
-        foreach(GameObject obj in movePointObjects)
+        foreach(GameObject obj in autoMovePointObjects)
         {
             obj.transform.tag = movePointObjectTag;
         }
@@ -243,7 +251,7 @@ public class UserControlManager : MonoBehaviour
 
                 // ポイントへの移動時は移動時または移動直後に回転ができるように各値を取得する
                 // 移動しきっていない状態でクリックしてしまったときに対する処理
-                else if(controlState == ControlState.MoveToPoint)
+                else if (controlState == ControlState.MoveToPoint)
                 {
                     cameraAngle = targetCamera.transform.localEulerAngles;
                     initialMousePosition = cursorPosition;
@@ -262,7 +270,8 @@ public class UserControlManager : MonoBehaviour
                         currentPopupEvent.Disappear();
                         ResetState();
                         //Debug.Log("Popup Dissapear");
-                    }                }
+                    }
+                }
             }
 
             // --------------------------------------------------
@@ -300,7 +309,7 @@ public class UserControlManager : MonoBehaviour
                 if (controlState != ControlState.PopupEvent)
                 {
                     lastMousePosition = cursorPosition;
-                }  
+                }
             }
 
             // --------------------------------------------------
@@ -327,20 +336,20 @@ public class UserControlManager : MonoBehaviour
                                 }
                                 break;
 
-                            case ClickMoveType.ToClosestPoint:
+                            case ClickMoveType.ToClosestAutoMovePoint:
 
-                                if(Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && movePointObjects.Count > 0)
+                                if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && autoMovePointObjects.Count > 0)
                                 {
-                                    Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestMovePointDetectOriginDistance;
+                                    Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestAutoMovePointDetectOriginDistance;
 
                                     GameObject target = null;
                                     float minDistance = 100f;
 
                                     // 登録されたオブジェクトとの距離を計測
-                                    foreach (GameObject obj in movePointObjects)
+                                    foreach (GameObject obj in autoMovePointObjects)
                                     {
                                         // 最後に移動した地点のオブジェクトは飛ばす
-                                        if(lastClosestPointObject != null && obj == lastClosestPointObject)
+                                        if (lastClosestPointObject != null && obj == lastClosestPointObject)
                                         {
                                             continue;
                                         }
@@ -349,14 +358,14 @@ public class UserControlManager : MonoBehaviour
                                         float dist = Vector3.Distance(detectOrigin, obj.transform.position);
 
                                         // 距離が近く、カメラの前方にあればターゲット判定する
-                                        if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardMovePointDetectThreshold)
+                                        if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardClosestAutoMovePointDetectRange)
                                         {
                                             minDistance = dist;
                                             target = obj;
                                         }
                                     }
 
-                                    if(target != null)
+                                    if (target != null)
                                     {
                                         // 移動ターゲットを更新
                                         lastClosestPointObject = target;
@@ -429,7 +438,7 @@ public class UserControlManager : MonoBehaviour
                     default:
                         break;
                 }
-                
+
                 hitTransform = null;
             }
             else
@@ -441,8 +450,10 @@ public class UserControlManager : MonoBehaviour
             }
 
             // カメラの位置・姿勢を更新
-            if(Vector3.Distance(targetCamera.transform.position, cameraPosition) > 0.01f)
+            if (Vector3.Distance(targetCamera.transform.position, cameraPosition) > 0.01f)
             {
+                moveVector = cameraPosition - targetCamera.transform.position;
+
                 // 位置を更新
                 targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, cameraPosition, moveSmoothing);
 
@@ -456,6 +467,8 @@ public class UserControlManager : MonoBehaviour
                 if(Vector3.Distance(targetCamera.transform.position, cameraPosition) <= 0.01f)
                 {
                     targetCamera.transform.position = cameraPosition;
+
+                    moveVector = Vector3.zero;
 
                     // 移動完了前にクリックしていた場合に状態が切り替わらないため、ここでCameraControlに状態変更する
                     if (controlState == ControlState.MoveToPoint)
@@ -495,13 +508,59 @@ public class UserControlManager : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
         if(CheckCollideObjectIsNotEventObject(other))
         {
-            Debug.Log("Trigger object...");
+            Debug.Log("Trigger Enter:" + other.gameObject.name);
+
+            isBounded = true;
+
+            // 物体からカメラの方向のベクトルを計算
+            //Vector3 reflect = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
+
+            // 目的地を再設定
+            //cameraPosition = targetCamera.transform.position + reflect * 0.5f;
+
+            // 物体からカメラの方向のベクトルを計算
+            boundDirection = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
         }
-        else
+        /*else
         {
             Debug.Log("Trigger event object.");
+        }*/
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
+        if (CheckCollideObjectIsNotEventObject(other))
+        {
+            Debug.Log("Trigger Stay:" + other.gameObject.name);
+
+            isBounded = true;
+
+            // 物体からカメラの方向のベクトルを計算
+            //Vector3 reflect = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
+
+            // 目的地を再設定
+            //cameraPosition = targetCamera.transform.position + reflect * 0.5f;
+
+            //cameraPosition = targetCamera.transform.position + reflectDirection * 0.5f;
+
+            // 目的地を再設定
+            cameraPosition = targetCamera.transform.position + boundDirection * wallBoundValue;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (CheckCollideObjectIsNotEventObject(other))
+        {
+            Debug.Log("Trigger Exit:" + other.gameObject.name);
+
+            isBounded = false;
+
+            boundDirection = Vector3.zero;
         }
     }
 
