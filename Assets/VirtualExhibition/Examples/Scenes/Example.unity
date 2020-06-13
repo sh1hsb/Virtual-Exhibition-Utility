@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 170076734}
-  m_IndirectSpecularColor: {r: 0.44657892, g: 0.49641263, b: 0.57481843, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657832, g: 0.4964118, b: 0.57481754, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -13095,7 +13095,7 @@ PrefabInstance:
     - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
       propertyPath: clickMoveType
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
@@ -13177,6 +13177,11 @@ PrefabInstance:
       propertyPath: autoMovePointObjects.Array.data[3]
       value: 
       objectReference: {fileID: 1863809241}
+    - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: enableCollider
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e54fbb08e561f2148915202e403e23e3, type: 3}
 --- !u!1001 &819330283022083185

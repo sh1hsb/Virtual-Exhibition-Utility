@@ -60,8 +60,9 @@ public class UserControlManager : MonoBehaviour
     public float fovPinchRate = 0.05f;
     public float fovMin = 30f;
     public float fovMax = 80f;
-    [Space(10)]
 
+    [Header("Camera Collider Setting")]
+    public bool enableCollider;
     public float wallBoundValue = 0.5f;
 
     [Header("Tags")]
@@ -76,9 +77,9 @@ public class UserControlManager : MonoBehaviour
     private Vector2 initialMousePosition;
     private Vector2 lastMousePosition;
     private Quaternion cameraPose;
-    [SerializeField]private Vector3 moveVector;
-    private Vector3 boundDirection;
-    private bool isBounded;
+    [SerializeField] private Vector3 moveVector;
+    [SerializeField] private Vector3 boundDirection;
+    [SerializeField] private bool isBounded;
 
     RaycastHit hit;
     Transform hitTransform;
@@ -175,277 +176,279 @@ public class UserControlManager : MonoBehaviour
             Ray ray = targetCamera.ScreenPointToRay(cursorPosition);
             Debug.DrawRay(ray.origin, ray.direction * 10f, Color.red, 3.0f);
 
-
-            // --------------------------------------------------
-            // 左クリック or シングルタップ開始
-            // --------------------------------------------------
-            if ((touchState == TouchState.Single && touchPhase == TouchPhase.Began) || Input.GetMouseButtonDown(0))
+            if (!isBounded)
             {
-                // UI上にポインタがあるかどうかチェック
-                bool isNotPointerOverUI = EventSystem.current != null ? !EventSystem.current.IsPointerOverGameObject() : true;
-
-                // イベント発生中、またはUI上にカーソルがある場合は操作しない
-                if (!IsEventInvoked && isNotPointerOverUI)
+                // --------------------------------------------------
+                // 左クリック or シングルタップ開始
+                // --------------------------------------------------
+                if ((touchState == TouchState.Single && touchPhase == TouchPhase.Began) || Input.GetMouseButtonDown(0))
                 {
-                    // Rayがヒットしたオブジェクトについて判定を行う
-                    if (Physics.Raycast(ray, out hit))
+                    // UI上にポインタがあるかどうかチェック
+                    bool isNotPointerOverUI = EventSystem.current != null ? !EventSystem.current.IsPointerOverGameObject() : true;
+
+                    // イベント発生中、またはUI上にカーソルがある場合は操作しない
+                    if (!IsEventInvoked && isNotPointerOverUI)
                     {
-                        // Transformを取得
-                        hitTransform = hit.transform;
+                        // Rayがヒットしたオブジェクトについて判定を行う
+                        if (Physics.Raycast(ray, out hit))
+                        {
+                            // Transformを取得
+                            hitTransform = hit.transform;
 
-                        // タグを取得
-                        // "ControllableObject"
-                        if (hitTransform.CompareTag(controllableObjectTag))
-                        {
-                            controlState = ControlState.ObjectControl;
-                            objectAngle = hitTransform.localEulerAngles;
-                            //Debug.Log("Object Control Start");
-                        }
-                        // "MovePointObject"
-                        else if (hitTransform.CompareTag(movePointObjectTag))
-                        {
-                            controlState = ControlState.MoveToPoint;
-                            cameraAngle = targetCamera.transform.localEulerAngles;
-                            //Debug.Log("Move to Point Start");
-                        }
-                        // "PopupEventObject"
-                        else if (hitTransform.CompareTag(popupEventObjectTag))
-                        {
-                            // PopupEventInvokerを取得
-                            currentPopupEvent = hitTransform.GetComponent<PopupEventInvoker>();
-
-                            // PopupEventInvokerが取得出来たらポップアップを実行
-                            if (currentPopupEvent != null)
+                            // タグを取得
+                            // "ControllableObject"
+                            if (hitTransform.CompareTag(controllableObjectTag))
                             {
-                                controlState = ControlState.PopupEvent;
-                                currentPopupEvent.Popup();
-                                //Debug.Log("Popup Start");
+                                controlState = ControlState.ObjectControl;
+                                objectAngle = hitTransform.localEulerAngles;
+                                //Debug.Log("Object Control Start");
                             }
-                            // 取得できなかった場合はCameraControlと同様の処理を行う
+                            // "MovePointObject"
+                            else if (hitTransform.CompareTag(movePointObjectTag))
+                            {
+                                controlState = ControlState.MoveToPoint;
+                                cameraAngle = targetCamera.transform.localEulerAngles;
+                                //Debug.Log("Move to Point Start");
+                            }
+                            // "PopupEventObject"
+                            else if (hitTransform.CompareTag(popupEventObjectTag))
+                            {
+                                // PopupEventInvokerを取得
+                                currentPopupEvent = hitTransform.GetComponent<PopupEventInvoker>();
+
+                                // PopupEventInvokerが取得出来たらポップアップを実行
+                                if (currentPopupEvent != null)
+                                {
+                                    controlState = ControlState.PopupEvent;
+                                    currentPopupEvent.Popup();
+                                    //Debug.Log("Popup Start");
+                                }
+                                // 取得できなかった場合はCameraControlと同様の処理を行う
+                                else
+                                {
+                                    controlState = ControlState.CameraControl;
+                                    cameraAngle = targetCamera.transform.localEulerAngles;
+                                    //Debug.Log("Camera Control Start (No Popup)");
+                                }
+                            }
+                            // タグなし
                             else
                             {
                                 controlState = ControlState.CameraControl;
                                 cameraAngle = targetCamera.transform.localEulerAngles;
-                                //Debug.Log("Camera Control Start (No Popup)");
+                                //Debug.Log("Camera Control Start (No tag)");
                             }
                         }
-                        // タグなし
                         else
                         {
                             controlState = ControlState.CameraControl;
                             cameraAngle = targetCamera.transform.localEulerAngles;
-                            //Debug.Log("Camera Control Start (No tag)");
+                            //Debug.Log("Camera Control Start (No Hit)");
+                        }
+
+                        // カーソル位置を取得し初期値とする
+                        initialMousePosition = cursorPosition;
+                        lastMousePosition = cursorPosition;
+                    }
+
+                    // ポイントへの移動時は移動時または移動直後に回転ができるように各値を取得する
+                    // 移動しきっていない状態でクリックしてしまったときに対する処理
+                    else if (controlState == ControlState.MoveToPoint)
+                    {
+                        cameraAngle = targetCamera.transform.localEulerAngles;
+                        initialMousePosition = cursorPosition;
+                        lastMousePosition = cursorPosition;
+                        //Debug.Log("Camera Control Start (Moving)");
+                    }
+
+                    // ポップアップ時はUI上でない場所でクリックするとポップアップ解除
+                    // タッチ時UI外を2回タップしないと解除できないのでそこは要検討
+                    else if (controlState == ControlState.PopupEvent && isNotPointerOverUI)
+                    {
+                        //Debug.Log("Popup End?");
+
+                        if (currentPopupEvent != null)
+                        {
+                            currentPopupEvent.Disappear();
+                            ResetState();
+                            //Debug.Log("Popup Dissapear");
                         }
                     }
-                    else
+                }
+
+                // --------------------------------------------------
+                // 左クリック or シングルタップ継続
+                // --------------------------------------------------
+                else if ((touchState == TouchState.Single && (touchPhase == TouchPhase.Moved || touchPhase == TouchPhase.Stationary)) || (touchState != TouchState.Multi && Input.GetMouseButton(0)))
+                {
+                    switch (controlState)
                     {
-                        controlState = ControlState.CameraControl;
-                        cameraAngle = targetCamera.transform.localEulerAngles;
-                        //Debug.Log("Camera Control Start (No Hit)");
+                        case ControlState.CameraControl:
+                        case ControlState.MoveToPoint:
+
+                            // カーソルの位置から回転量を計算
+                            cameraAngle.y += (reverseRotationHorizontal ? -1 : 1) * (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
+                            cameraAngle.x += (reverseRotationVertical ? -1 : 1) * (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
+
+                            // オブジェクトに回転を適用
+                            targetCamera.transform.localEulerAngles = cameraAngle;
+                            break;
+
+                        case ControlState.ObjectControl:
+
+                            // カーソルの位置から回転量を計算
+                            objectAngle.y += (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
+                            objectAngle.x += (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
+
+                            // オブジェクトに回転を適用
+                            hitTransform.localEulerAngles = objectAngle;
+                            break;
+
+                        default:
+                            break;
                     }
 
-                    // カーソル位置を取得し初期値とする
-                    initialMousePosition = cursorPosition;
-                    lastMousePosition = cursorPosition;
-                }
-
-                // ポイントへの移動時は移動時または移動直後に回転ができるように各値を取得する
-                // 移動しきっていない状態でクリックしてしまったときに対する処理
-                else if (controlState == ControlState.MoveToPoint)
-                {
-                    cameraAngle = targetCamera.transform.localEulerAngles;
-                    initialMousePosition = cursorPosition;
-                    lastMousePosition = cursorPosition;
-                    //Debug.Log("Camera Control Start (Moving)");
-                }
-
-                // ポップアップ時はUI上でない場所でクリックするとポップアップ解除
-                // タッチ時UI外を2回タップしないと解除できないのでそこは要検討
-                else if (controlState == ControlState.PopupEvent && isNotPointerOverUI)
-                {
-                    //Debug.Log("Popup End?");
-
-                    if (currentPopupEvent != null)
+                    if (controlState != ControlState.PopupEvent)
                     {
-                        currentPopupEvent.Disappear();
-                        ResetState();
-                        //Debug.Log("Popup Dissapear");
+                        lastMousePosition = cursorPosition;
                     }
                 }
-            }
 
-            // --------------------------------------------------
-            // 左クリック or シングルタップ継続
-            // --------------------------------------------------
-            else if ((touchState == TouchState.Single && (touchPhase == TouchPhase.Moved || touchPhase == TouchPhase.Stationary)) || (touchState != TouchState.Multi && Input.GetMouseButton(0)))
-            {
-                switch (controlState)
+                // --------------------------------------------------
+                // 左クリック or シングルタップ終了
+                // --------------------------------------------------
+                else if ((touchState == TouchState.Single && (touchPhase == TouchPhase.Ended || touchPhase == TouchPhase.Canceled)) || Input.GetMouseButtonUp(0))
                 {
-                    case ControlState.CameraControl:
-                    case ControlState.MoveToPoint:
+                    switch (controlState)
+                    {
+                        case ControlState.CameraControl:
 
-                        // カーソルの位置から回転量を計算
-                        cameraAngle.y += (reverseRotationHorizontal ? -1 : 1) * (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
-                        cameraAngle.x += (reverseRotationVertical ? -1 : 1) * (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
+                            // 移動位置を設定
+                            //Debug.Log("camera pos update? (camera control)");
 
-                        // オブジェクトに回転を適用
-                        targetCamera.transform.localEulerAngles = cameraAngle;
-                        break;
+                            switch (clickMoveType)
+                            {
+                                case ClickMoveType.Freewalk:
+                                    if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
+                                    {
+                                        // カメラ位置を更新
+                                        cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
 
-                    case ControlState.ObjectControl:
+                                        //Debug.Log("camera pos update (camera control)");
+                                    }
+                                    break;
 
-                        // カーソルの位置から回転量を計算
-                        objectAngle.y += (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
-                        objectAngle.x += (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
+                                case ClickMoveType.ToClosestAutoMovePoint:
 
-                        // オブジェクトに回転を適用
-                        hitTransform.localEulerAngles = objectAngle;
-                        break;
+                                    if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && autoMovePointObjects.Count > 0)
+                                    {
+                                        Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestAutoMovePointDetectOriginDistance;
 
-                    default:
-                        break;
-                }
+                                        GameObject target = null;
+                                        float minDistance = 100f;
 
-                if (controlState != ControlState.PopupEvent)
-                {
-                    lastMousePosition = cursorPosition;
-                }
-            }
+                                        // 登録されたオブジェクトとの距離を計測
+                                        foreach (GameObject obj in autoMovePointObjects)
+                                        {
+                                            // 最後に移動した地点のオブジェクトは飛ばす
+                                            if (lastClosestPointObject != null && obj == lastClosestPointObject)
+                                            {
+                                                continue;
+                                            }
 
-            // --------------------------------------------------
-            // 左クリック or シングルタップ終了
-            // --------------------------------------------------
-            else if ((touchState == TouchState.Single && (touchPhase == TouchPhase.Ended || touchPhase == TouchPhase.Canceled)) || Input.GetMouseButtonUp(0))
-            {
-                switch (controlState)
-                {
-                    case ControlState.CameraControl:
+                                            // オブジェクトまでの距離を計算
+                                            float dist = Vector3.Distance(detectOrigin, obj.transform.position);
 
-                        // 移動位置を設定
-                        //Debug.Log("camera pos update? (camera control)");
+                                            // 距離が近く、カメラの前方にあればターゲット判定する
+                                            if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardClosestAutoMovePointDetectRange)
+                                            {
+                                                minDistance = dist;
+                                                target = obj;
+                                            }
+                                        }
 
-                        switch (clickMoveType)
-                        {
-                            case ClickMoveType.Freewalk:
-                                if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
+                                        if (target != null)
+                                        {
+                                            // 移動ターゲットを更新
+                                            lastClosestPointObject = target;
+
+                                            // 状態をMoveToPointに更新する
+                                            controlState = ControlState.MoveToPoint;
+
+                                            // カメラ位置を更新
+                                            cameraPosition = new Vector3(target.transform.position.x, targetCamera.transform.position.y, target.transform.position.z);
+
+                                            // 移動方向を向く
+                                            if (lookAtMovePointOnMove)
+                                            {
+                                                // 目的の方向へ向くための回転を計算
+                                                Vector3 targetRot = Quaternion.LookRotation(target.transform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
+
+                                                // 現在の姿勢を取得
+                                                Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
+
+                                                // Y軸のみを回転するようにする
+                                                cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
+                                            }
+
+                                            //Debug.Log("camera pos update (to closest point)");
+                                        }
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+
+                            break;
+
+                        case ControlState.MoveToPoint:
+
+                            // 移動位置を設定
+                            if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
+                            {
+                                //Debug.Log("camera pos update? (move to point)");
+
+                                if (hitTransform != null)
                                 {
                                     // カメラ位置を更新
-                                    cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
+                                    cameraPosition = new Vector3(hitTransform.position.x, targetCamera.transform.position.y, hitTransform.position.z);
 
-                                    //Debug.Log("camera pos update (camera control)");
-                                }
-                                break;
-
-                            case ClickMoveType.ToClosestAutoMovePoint:
-
-                                if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && autoMovePointObjects.Count > 0)
-                                {
-                                    Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestAutoMovePointDetectOriginDistance;
-
-                                    GameObject target = null;
-                                    float minDistance = 100f;
-
-                                    // 登録されたオブジェクトとの距離を計測
-                                    foreach (GameObject obj in autoMovePointObjects)
+                                    // 移動方向を向く
+                                    if (lookAtMovePointOnMove)
                                     {
-                                        // 最後に移動した地点のオブジェクトは飛ばす
-                                        if (lastClosestPointObject != null && obj == lastClosestPointObject)
-                                        {
-                                            continue;
-                                        }
+                                        // 目的の方向へ向くための回転を計算
+                                        Vector3 targetRot = Quaternion.LookRotation(hitTransform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
 
-                                        // オブジェクトまでの距離を計算
-                                        float dist = Vector3.Distance(detectOrigin, obj.transform.position);
+                                        // 現在の姿勢を取得
+                                        Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
 
-                                        // 距離が近く、カメラの前方にあればターゲット判定する
-                                        if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardClosestAutoMovePointDetectRange)
-                                        {
-                                            minDistance = dist;
-                                            target = obj;
-                                        }
+                                        // Y軸のみを回転するようにする
+                                        cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
                                     }
 
-                                    if (target != null)
-                                    {
-                                        // 移動ターゲットを更新
-                                        lastClosestPointObject = target;
-
-                                        // 状態をMoveToPointに更新する
-                                        controlState = ControlState.MoveToPoint;
-
-                                        // カメラ位置を更新
-                                        cameraPosition = new Vector3(target.transform.position.x, targetCamera.transform.position.y, target.transform.position.z);
-
-                                        // 移動方向を向く
-                                        if (lookAtMovePointOnMove)
-                                        {
-                                            // 目的の方向へ向くための回転を計算
-                                            Vector3 targetRot = Quaternion.LookRotation(target.transform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
-
-                                            // 現在の姿勢を取得
-                                            Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
-
-                                            // Y軸のみを回転するようにする
-                                            cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
-                                        }
-
-                                        //Debug.Log("camera pos update (to closest point)");
-                                    }
+                                    //Debug.Log("camera pos update (move to point)");
                                 }
-                                break;
-
-                            default:
-                                break;
-                        }
-
-                        break;
-
-                    case ControlState.MoveToPoint:
-
-                        // 移動位置を設定
-                        if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
-                        {
-                            //Debug.Log("camera pos update? (move to point)");
-
-                            if (hitTransform != null)
-                            {
-                                // カメラ位置を更新
-                                cameraPosition = new Vector3(hitTransform.position.x, targetCamera.transform.position.y, hitTransform.position.z);
-
-                                // 移動方向を向く
-                                if (lookAtMovePointOnMove)
-                                {
-                                    // 目的の方向へ向くための回転を計算
-                                    Vector3 targetRot = Quaternion.LookRotation(hitTransform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
-
-                                    // 現在の姿勢を取得
-                                    Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
-
-                                    // Y軸のみを回転するようにする
-                                    cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
-                                }
-
-                                //Debug.Log("camera pos update (move to point)");
                             }
-                        }
-                        else
-                        {
-                            controlState = ControlState.None;
-                            //Debug.Log("camera pos no update (move to point)");
-                        }
-                        break;
+                            else
+                            {
+                                controlState = ControlState.None;
+                                //Debug.Log("camera pos no update (move to point)");
+                            }
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
+
+                    hitTransform = null;
                 }
-
-                hitTransform = null;
-            }
-            else
-            {
-                if (!IsEventInvoked)
+                else
                 {
-                    controlState = ControlState.None;
+                    if (!IsEventInvoked)
+                    {
+                        controlState = ControlState.None;
+                    }
                 }
             }
 
@@ -509,9 +512,9 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if(CheckCollideObjectIsNotEventObject(other))
+        if(enableCollider && CheckCollideObjectIsNotEventObject(other))
         {
-            Debug.Log("Trigger Enter:" + other.gameObject.name);
+            //Debug.Log("Trigger Enter:" + other.gameObject.name);
 
             isBounded = true;
 
@@ -533,9 +536,9 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerStay(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if (CheckCollideObjectIsNotEventObject(other))
+        if (enableCollider && CheckCollideObjectIsNotEventObject(other))
         {
-            Debug.Log("Trigger Stay:" + other.gameObject.name);
+            //Debug.Log("Trigger Stay:" + other.gameObject.name);
 
             isBounded = true;
 
@@ -554,13 +557,13 @@ public class UserControlManager : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (CheckCollideObjectIsNotEventObject(other))
+        if (enableCollider && CheckCollideObjectIsNotEventObject(other))
         {
-            Debug.Log("Trigger Exit:" + other.gameObject.name);
+            //Debug.Log("Trigger Exit:" + other.gameObject.name);
 
             isBounded = false;
 
-            boundDirection = Vector3.zero;
+            //boundDirection = Vector3.zero;
         }
     }
 
