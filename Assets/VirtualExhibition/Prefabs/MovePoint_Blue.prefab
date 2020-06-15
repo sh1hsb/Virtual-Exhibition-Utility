@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 295087495077899249}
   - component: {fileID: 295087495077899250}
   - component: {fileID: 295087495077899251}
+  - component: {fileID: -377772418751751207}
   - component: {fileID: -6561420656887829870}
   m_Layer: 0
   m_Name: MovePoint_Blue
@@ -96,6 +97,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &-377772418751751207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295087495077898252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf561a180cbdf4044a415092535edba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movePointEvents:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &-6561420656887829870
 MonoBehaviour:
   m_ObjectHideFlags: 0

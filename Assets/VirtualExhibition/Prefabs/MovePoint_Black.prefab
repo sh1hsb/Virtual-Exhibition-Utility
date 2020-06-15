@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7102630358866719829}
   - component: {fileID: 7102630358866719824}
   - component: {fileID: 7102630358866719827}
+  - component: {fileID: 7469673156704891737}
   - component: {fileID: -6255103324771481792}
   m_Layer: 0
   m_Name: MovePoint_Black
@@ -96,6 +97,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7469673156704891737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7102630358866719825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf561a180cbdf4044a415092535edba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movePointEvents:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &-6255103324771481792
 MonoBehaviour:
   m_ObjectHideFlags: 0

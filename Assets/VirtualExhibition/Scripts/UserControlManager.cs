@@ -13,6 +13,7 @@ using UnityEngine.EventSystems;
 
 public class UserControlManager : MonoBehaviour
 {
+    #region Classes, Structures, Enumerated types
     public enum ControlState
     {
         None,
@@ -35,7 +36,9 @@ public class UserControlManager : MonoBehaviour
         Freewalk,
         ToClosestAutoMovePoint
     }
+    #endregion
 
+    #region Public and Serialized Fields
     public ControlState controlState = ControlState.None;
 
     [Header("Camera Control Setting")]
@@ -76,8 +79,9 @@ public class UserControlManager : MonoBehaviour
     public string controllableObjectTag = "ControllableObject";
     public string movePointObjectTag = "MovePointObject";
     public string popupEventObjectTag = "PopupEventObject";
+    #endregion
 
-
+    #region Private Fields
     private Vector3 cameraPosition;
     private Vector2 cameraAngle;
     private Vector2 objectAngle;
@@ -97,7 +101,9 @@ public class UserControlManager : MonoBehaviour
     private float touchDistanceDelta;
     private float lastTouchDistance;
     private bool multiTouchEngaged;
+    #endregion
 
+    #region Properties
     public bool IsEventInvoked
     {
         get
@@ -105,7 +111,9 @@ public class UserControlManager : MonoBehaviour
             return controlState == ControlState.MoveToPoint || controlState == ControlState.PopupEvent;
         }
     }
+    #endregion
 
+    #region Unity API
     void Start()
     {
         if(targetCamera != null)
@@ -433,6 +441,13 @@ public class UserControlManager : MonoBehaviour
                                         cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
                                     }
 
+                                    MovePointEventInvoker eventInvoker = hitTransform.GetComponent<MovePointEventInvoker>();
+
+                                    if(eventInvoker != null)
+                                    {
+                                        eventInvoker.Invoke();
+                                    }
+
                                     //Debug.Log("camera pos update (move to point)");
                                 }
                             }
@@ -470,7 +485,7 @@ public class UserControlManager : MonoBehaviour
 
                 if(Physics.Raycast(rayToGround, out groundHit))
                 {
-                    if (CheckCollideObjectIsNotEventObject(groundHit.transform))
+                    if (CheckObjectIsNotEventObject(groundHit.transform))
                     {
                         // 激しくバウンドするのを防ぐため誤差値を考慮して挙動を制御
                         if (groundHit.distance > heightFromGround + groundHeightTolerance )
@@ -553,7 +568,7 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if(enableCollider && controlState != ControlState.MoveToPoint && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
+        if(enableCollider && controlState != ControlState.MoveToPoint && CheckObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Enter:" + other.gameObject.name);
 
@@ -577,7 +592,7 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerStay(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if (enableCollider && controlState != ControlState.MoveToPoint && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
+        if (enableCollider && controlState != ControlState.MoveToPoint && CheckObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Stay:" + other.gameObject.name);
 
@@ -598,7 +613,7 @@ public class UserControlManager : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (enableCollider && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
+        if (enableCollider && CheckObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Exit:" + other.gameObject.name);
 
@@ -607,7 +622,9 @@ public class UserControlManager : MonoBehaviour
             //boundDirection = Vector3.zero;
         }
     }
+    #endregion
 
+    #region Public Methods
     public void ResetState()
     {
         controlState = ControlState.None;
@@ -628,8 +645,15 @@ public class UserControlManager : MonoBehaviour
     {
         cameraPosition = position;
     }
+    #endregion
 
-    private bool CheckCollideObjectIsNotEventObject(Transform target)
+    #region Private Methods
+    /// <summary>
+    /// オブジェクトのタグをチェックしイベント発生用オブジェクトかどうか調べる
+    /// </summary>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    private bool CheckObjectIsNotEventObject(Transform target)
     {
         if(target.CompareTag(movePointObjectTag) || target.CompareTag(popupEventObjectTag))
         {
@@ -640,4 +664,5 @@ public class UserControlManager : MonoBehaviour
             return true;
         }
     }
+    #endregion
 }

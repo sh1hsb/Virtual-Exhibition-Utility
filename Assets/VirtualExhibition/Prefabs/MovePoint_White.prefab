@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7822218634927018506}
   - component: {fileID: 7822218634927018505}
   - component: {fileID: 7822218634927018504}
+  - component: {fileID: -7045385437934065272}
   - component: {fileID: 1858759527037781388}
   m_Layer: 0
   m_Name: MovePoint_White
@@ -96,6 +97,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &-7045385437934065272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7822218634927018487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf561a180cbdf4044a415092535edba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movePointEvents:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &1858759527037781388
 MonoBehaviour:
   m_ObjectHideFlags: 0
