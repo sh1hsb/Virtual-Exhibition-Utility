@@ -555,7 +555,7 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if(enableCollider && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
+        if(enableCollider && controlState != ControlState.MoveToPoint && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Enter:" + other.gameObject.name);
 
@@ -579,7 +579,7 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerStay(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if (enableCollider && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
+        if (enableCollider && controlState != ControlState.MoveToPoint && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Stay:" + other.gameObject.name);
 
