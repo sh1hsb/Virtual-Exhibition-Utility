@@ -40,13 +40,13 @@ public class UserControlManager : MonoBehaviour
 
     [Header("Camera Control Setting")]
     public Camera targetCamera;
+    
     [Space(10)]
-
     public Vector2 rotationSpeed = new Vector2(0.05f, 0.05f);
     public bool reverseRotationHorizontal;
     public bool reverseRotationVertical;
+    
     [Space(10)]
-
     public ClickMoveType clickMoveType = ClickMoveType.None;
     public float moveRate = 1f;
     [Range(0f, 1f)] public float moveSmoothing = 0.1f;
@@ -54,8 +54,8 @@ public class UserControlManager : MonoBehaviour
     public float closestAutoMovePointDetectOriginDistance = 3.0f;
     [Range(0f, 1f)] public float forwardClosestAutoMovePointDetectRange = 0.5f;
     public List<GameObject> autoMovePointObjects;
+    
     [Space(10)]
-
     public float fovRate = 10f;
     public float fovPinchRate = 0.05f;
     public float fovMin = 30f;
@@ -64,11 +64,13 @@ public class UserControlManager : MonoBehaviour
     [Header("Camera Collider Setting")]
     public bool enableCollider;
     public float wallBoundValue = 0.5f;
-    [Space(10)]
+
+    [Header("Ground Standing Setting")]
     public bool enableGroundStanding;
+    public bool stayHeightOnNoGround = true;
     public float heightFromGround = 1.7f;
     public float groundHeightTolerance = 0.05f;
-
+    public float upLiftScale = 0.1f;
 
     [Header("Tags")]
     public string controllableObjectTag = "ControllableObject";
@@ -82,9 +84,8 @@ public class UserControlManager : MonoBehaviour
     private Vector2 initialMousePosition;
     private Vector2 lastMousePosition;
     private Quaternion cameraPose;
-    [SerializeField] private Vector3 moveVector;
-    [SerializeField] private Vector3 boundDirection;
-    [SerializeField] private bool isBounded;
+    private Vector3 boundDirection;
+    private bool isBounded;
 
     RaycastHit hit;
     Transform hitTransform;
@@ -471,26 +472,27 @@ public class UserControlManager : MonoBehaviour
                 {
                     if (CheckCollideObjectIsNotEventObject(groundHit.transform))
                     {
-                        // Debug.Log(groundHit.distance);
-
                         // 激しくバウンドするのを防ぐため誤差値を考慮して挙動を制御
-
-                        // 地面に接していない場合は重力による自由落下
                         if (groundHit.distance > heightFromGround + groundHeightTolerance )
                         {
+                            // 地面に接していない場合は重力による自由落下
                             cameraPosition.y += -9.8f * Time.deltaTime;
                         }
-
-                        // 地面にめり込んでいる場合はめり込まないように位置を調整
                         else if (groundHit.distance < heightFromGround - groundHeightTolerance)
                         {
-                            cameraPosition.y += (heightFromGround - groundHit.distance) * 0.1f;
+                            // 地面にめり込んでいる場合はめり込まないように位置を調整
+                            // いきなり飛び出した感じにならないように倍率調整する
+                            cameraPosition.y += (heightFromGround - groundHit.distance) * upLiftScale;
                         }
                     }
                 }
                 else
                 {
-                    cameraPosition.y += -9.8f * Time.deltaTime;
+                    // stayHeightOnNoGround = trueのときは地面がない場所で無限に落下しないように高さ座標を固定
+                    if (!stayHeightOnNoGround)
+                    {
+                        cameraPosition.y += -9.8f * Time.deltaTime;
+                    }
                 }
             }
 
@@ -498,8 +500,6 @@ public class UserControlManager : MonoBehaviour
             // カメラの位置・姿勢を更新
             if (Vector3.Distance(targetCamera.transform.position, cameraPosition) > 0.01f)
             {
-                moveVector = cameraPosition - targetCamera.transform.position;
-
                 // 位置を更新
                 targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, cameraPosition, moveSmoothing);
 
@@ -513,8 +513,6 @@ public class UserControlManager : MonoBehaviour
                 if(Vector3.Distance(targetCamera.transform.position, cameraPosition) <= 0.01f)
                 {
                     targetCamera.transform.position = cameraPosition;
-
-                    moveVector = Vector3.zero;
 
                     // 移動完了前にクリックしていた場合に状態が切り替わらないため、ここでCameraControlに状態変更する
                     if (controlState == ControlState.MoveToPoint)
