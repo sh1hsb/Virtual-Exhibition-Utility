@@ -107,15 +107,24 @@ MonoBehaviour:
   moveRate: 1
   moveSmoothing: 0.1
   lookAtMovePointOnMove: 0
-  forwardObjectDetectThreshold: 0.5
-  movePointObjects: []
+  closestAutoMovePointDetectOriginDistance: 3
+  forwardClosestAutoMovePointDetectRange: 0.5
+  autoMovePointObjects: []
   fovRate: 10
   fovPinchRate: 0.05
   fovMin: 30
   fovMax: 80
+  enableCollider: 0
+  wallBoundValue: 0.5
+  enableGroundStanding: 0
+  heightFromGround: 1.7
+  groundHeightTolerance: 0.05
   controllableObjectTag: ControllableObject
   movePointObjectTag: MovePointObject
   popupEventObjectTag: PopupEventObject
+  moveVector: {x: 0, y: 0, z: 0}
+  boundDirection: {x: 0, y: 0, z: 0}
+  isBounded: 0
 --- !u!136 &2128377233143658023
 CapsuleCollider:
   m_ObjectHideFlags: 0

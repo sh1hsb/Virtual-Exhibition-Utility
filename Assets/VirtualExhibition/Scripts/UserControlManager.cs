@@ -64,6 +64,11 @@ public class UserControlManager : MonoBehaviour
     [Header("Camera Collider Setting")]
     public bool enableCollider;
     public float wallBoundValue = 0.5f;
+    [Space(10)]
+    public bool enableGroundStanding;
+    public float heightFromGround = 1.7f;
+    public float groundHeightTolerance = 0.05f;
+
 
     [Header("Tags")]
     public string controllableObjectTag = "ControllableObject";
@@ -452,6 +457,44 @@ public class UserControlManager : MonoBehaviour
                 }
             }
 
+            // 地面(下側の当たり判定付きオブジェクト)に立てるようにする
+            if (enableGroundStanding)
+            {
+                // カメラの下方向に向けてRayを照射
+                Ray rayToGround = new Ray(targetCamera.transform.position, - Vector3.up);
+
+                // Debug.DrawRay(rayToGround.origin, rayToGround.direction * 5f, Color.blue, 1.0f);
+
+                RaycastHit groundHit;
+
+                if(Physics.Raycast(rayToGround, out groundHit))
+                {
+                    if (CheckCollideObjectIsNotEventObject(groundHit.transform))
+                    {
+                        // Debug.Log(groundHit.distance);
+
+                        // 激しくバウンドするのを防ぐため誤差値を考慮して挙動を制御
+
+                        // 地面に接していない場合は重力による自由落下
+                        if (groundHit.distance > heightFromGround + groundHeightTolerance )
+                        {
+                            cameraPosition.y += -9.8f * Time.deltaTime;
+                        }
+
+                        // 地面にめり込んでいる場合はめり込まないように位置を調整
+                        else if (groundHit.distance < heightFromGround - groundHeightTolerance)
+                        {
+                            cameraPosition.y += (heightFromGround - groundHit.distance) * 0.1f;
+                        }
+                    }
+                }
+                else
+                {
+                    cameraPosition.y += -9.8f * Time.deltaTime;
+                }
+            }
+
+
             // カメラの位置・姿勢を更新
             if (Vector3.Distance(targetCamera.transform.position, cameraPosition) > 0.01f)
             {
@@ -512,7 +555,7 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if(enableCollider && CheckCollideObjectIsNotEventObject(other))
+        if(enableCollider && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Enter:" + other.gameObject.name);
 
@@ -536,7 +579,7 @@ public class UserControlManager : MonoBehaviour
     private void OnTriggerStay(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if (enableCollider && CheckCollideObjectIsNotEventObject(other))
+        if (enableCollider && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Stay:" + other.gameObject.name);
 
@@ -557,7 +600,7 @@ public class UserControlManager : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (enableCollider && CheckCollideObjectIsNotEventObject(other))
+        if (enableCollider && CheckCollideObjectIsNotEventObject(other.gameObject.transform))
         {
             //Debug.Log("Trigger Exit:" + other.gameObject.name);
 
@@ -588,9 +631,9 @@ public class UserControlManager : MonoBehaviour
         cameraPosition = position;
     }
 
-    private bool CheckCollideObjectIsNotEventObject(Collider other)
+    private bool CheckCollideObjectIsNotEventObject(Transform target)
     {
-        if(other.gameObject.transform.CompareTag(movePointObjectTag) || other.gameObject.transform.CompareTag(popupEventObjectTag))
+        if(target.CompareTag(movePointObjectTag) || target.CompareTag(popupEventObjectTag))
         {
             return false;
         }
