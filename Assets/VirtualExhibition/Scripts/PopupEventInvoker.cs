@@ -21,6 +21,7 @@ public class PopupEventInvoker : MonoBehaviour
 
     public GameObject mainPopupUI;
     public MainUIPopupPosition popupPosition;
+    public int edgeOffset = 10;
 
     public GameObject[] AppearObjects;
 
@@ -28,6 +29,7 @@ public class PopupEventInvoker : MonoBehaviour
     public UnityEvent onDisappear;
 
     private Vector2 screenCenter;
+    private Canvas mainUICanvas;
     private RectTransform mainUIRectTransform;
 
     void Start()
@@ -37,6 +39,9 @@ public class PopupEventInvoker : MonoBehaviour
 
         // メインUIのRectTransformを取得
         mainUIRectTransform = mainPopupUI.GetComponent<RectTransform>();
+
+        // メインUIのCanvasを取得
+        mainUICanvas = mainPopupUI.transform.parent.GetComponent<Canvas>();
     }
 
     public void Popup()
@@ -67,22 +72,22 @@ public class PopupEventInvoker : MonoBehaviour
                         var screenPos = RectTransformUtility.WorldToScreenPoint(cameraController.targetCamera, this.transform.position);
 
                         // UIがスクリーンからはみ出ないように位置調整
-                        if (screenPos.x + mainUIRectTransform.sizeDelta.x / 2f > Screen.width)
+                        if (screenPos.x + mainUIRectTransform.sizeDelta.x * mainUICanvas.scaleFactor / 2f > Screen.width)
                         {
-                            screenPos.x = Screen.width - mainUIRectTransform.sizeDelta.x / 2f;
+                            screenPos.x = Screen.width - mainUIRectTransform.sizeDelta.x * mainUICanvas.scaleFactor / 2f - edgeOffset;
                         }
-                        else if(screenPos.x - mainUIRectTransform.sizeDelta.x / 2f < 0)
+                        else if(screenPos.x - mainUIRectTransform.sizeDelta.x * mainUICanvas.scaleFactor / 2f < 0)
                         {
-                            screenPos.x = mainUIRectTransform.sizeDelta.x / 2f;
+                            screenPos.x = mainUIRectTransform.sizeDelta.x * mainUICanvas.scaleFactor / 2f + edgeOffset;
                         }
 
-                        if (screenPos.y + mainUIRectTransform.sizeDelta.y / 2f > Screen.height)
+                        if (screenPos.y + mainUIRectTransform.sizeDelta.y * mainUICanvas.scaleFactor / 2f > Screen.height)
                         {
-                            screenPos.y = Screen.height - mainUIRectTransform.sizeDelta.y / 2f;
+                            screenPos.y = Screen.height - mainUIRectTransform.sizeDelta.y * mainUICanvas.scaleFactor / 2f - edgeOffset;
                         }
-                        else if (screenPos.y - mainUIRectTransform.sizeDelta.y / 2f < 0)
+                        else if (screenPos.y - mainUIRectTransform.sizeDelta.y * mainUICanvas.scaleFactor / 2f < 0)
                         {
-                            screenPos.y = mainUIRectTransform.sizeDelta.y / 2f;
+                            screenPos.y = mainUIRectTransform.sizeDelta.y * mainUICanvas.scaleFactor / 2f + edgeOffset;
                         }
 
                         // 位置を更新

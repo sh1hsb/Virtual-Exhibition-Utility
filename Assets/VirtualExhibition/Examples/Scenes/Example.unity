@@ -5850,6 +5850,11 @@ PrefabInstance:
       propertyPath: mainPopupUI
       value: 
       objectReference: {fileID: 576504537}
+    - target: {fileID: 6531391910992105309, guid: 14d0eba3f21c65c43a0e3c32be0a2698,
+        type: 3}
+      propertyPath: edgeOffset
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 7098263310511969102, guid: 14d0eba3f21c65c43a0e3c32be0a2698,
         type: 3}
       propertyPath: targetCamera
@@ -6119,6 +6124,11 @@ PrefabInstance:
       propertyPath: mainPopupUI
       value: 
       objectReference: {fileID: 576504537}
+    - target: {fileID: 6531391910992105309, guid: 14d0eba3f21c65c43a0e3c32be0a2698,
+        type: 3}
+      propertyPath: edgeOffset
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 7098263310511969102, guid: 14d0eba3f21c65c43a0e3c32be0a2698,
         type: 3}
       propertyPath: targetCamera
@@ -13995,6 +14005,11 @@ PrefabInstance:
         type: 3}
       propertyPath: popupPosition
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6531391910992105309, guid: 14d0eba3f21c65c43a0e3c32be0a2698,
+        type: 3}
+      propertyPath: edgeOffset
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7098263310511969102, guid: 14d0eba3f21c65c43a0e3c32be0a2698,
         type: 3}
