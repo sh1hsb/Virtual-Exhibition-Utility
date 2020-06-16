@@ -6,8 +6,6 @@
 //
 // **************************************************
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -21,10 +19,9 @@ public class UserNearDetector : MonoBehaviour
     public UnityEvent onUserDetect;
     public UnityEvent onUserLost;
 
-    [SerializeField] private Renderer[] renderers;
-    [SerializeField] private Collider[] colliders;
-
-    [SerializeField] private bool isDetected;
+    private Renderer[] renderers;
+    private Collider[] colliders;
+    private bool isDetected;
 
     // Start is called before the first frame update
     void Start()
@@ -49,16 +46,12 @@ public class UserNearDetector : MonoBehaviour
                 UpdateState(true);
 
                 onUserDetect?.Invoke();
-
-                //Debug.Log("User Detect");
             }
             else if(distance > detectDistance && isDetected)
             {
                 UpdateState(false);
 
                 onUserLost?.Invoke();
-
-                //Debug.Log("User Lost");
             }
         }
     }

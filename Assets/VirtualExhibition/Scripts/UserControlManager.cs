@@ -6,7 +6,6 @@
 //
 // **************************************************
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -91,8 +90,8 @@ public class UserControlManager : MonoBehaviour
     private Vector3 boundDirection;
     private bool isBounded;
 
-    RaycastHit hit;
-    Transform hitTransform;
+    private RaycastHit hit;
+    private Transform hitTransform;
 
     private GameObject lastClosestPointObject;
 
@@ -152,7 +151,6 @@ public class UserControlManager : MonoBehaviour
                     // 
                     touchState = TouchState.Single;
                     if (multiTouchEngaged) multiTouchEngaged = false;
-                    //Debug.Log("Single Touch Detected");
                 }
                 else
                 {
@@ -175,8 +173,6 @@ public class UserControlManager : MonoBehaviour
 
                     // 今回の計算値を保存
                     lastTouchDistance = touchDist;
-
-                    //Debug.Log("Multi Touch Detected");
                 }
             }
             
@@ -215,14 +211,12 @@ public class UserControlManager : MonoBehaviour
                             {
                                 controlState = ControlState.ObjectControl;
                                 objectAngle = hitTransform.localEulerAngles;
-                                //Debug.Log("Object Control Start");
                             }
                             // "MovePointObject"
                             else if (hitTransform.CompareTag(movePointObjectTag))
                             {
                                 controlState = ControlState.MoveToPoint;
                                 cameraAngle = targetCamera.transform.localEulerAngles;
-                                //Debug.Log("Move to Point Start");
                             }
                             // "PopupEventObject"
                             else if (hitTransform.CompareTag(popupEventObjectTag))
@@ -235,14 +229,12 @@ public class UserControlManager : MonoBehaviour
                                 {
                                     controlState = ControlState.PopupEvent;
                                     currentPopupEvent.Popup();
-                                    //Debug.Log("Popup Start");
                                 }
                                 // 取得できなかった場合はCameraControlと同様の処理を行う
                                 else
                                 {
                                     controlState = ControlState.CameraControl;
                                     cameraAngle = targetCamera.transform.localEulerAngles;
-                                    //Debug.Log("Camera Control Start (No Popup)");
                                 }
                             }
                             // タグなし
@@ -250,14 +242,12 @@ public class UserControlManager : MonoBehaviour
                             {
                                 controlState = ControlState.CameraControl;
                                 cameraAngle = targetCamera.transform.localEulerAngles;
-                                //Debug.Log("Camera Control Start (No tag)");
                             }
                         }
                         else
                         {
                             controlState = ControlState.CameraControl;
                             cameraAngle = targetCamera.transform.localEulerAngles;
-                            //Debug.Log("Camera Control Start (No Hit)");
                         }
 
                         // カーソル位置を取得し初期値とする
@@ -272,20 +262,16 @@ public class UserControlManager : MonoBehaviour
                         cameraAngle = targetCamera.transform.localEulerAngles;
                         initialMousePosition = cursorPosition;
                         lastMousePosition = cursorPosition;
-                        //Debug.Log("Camera Control Start (Moving)");
                     }
 
                     // ポップアップ時はUI上でない場所でクリックするとポップアップ解除
                     // タッチ時UI外を2回タップしないと解除できないのでそこは要検討
                     else if (controlState == ControlState.PopupEvent && isNotPointerOverUI)
                     {
-                        //Debug.Log("Popup End?");
-
                         if (currentPopupEvent != null)
                         {
                             currentPopupEvent.Disappear();
                             ResetState();
-                            //Debug.Log("Popup Dissapear");
                         }
                     }
                 }
@@ -347,8 +333,6 @@ public class UserControlManager : MonoBehaviour
                                     {
                                         // カメラ位置を更新
                                         cameraPosition += new Vector3(ray.direction.x, 0f, ray.direction.z) * moveRate;
-
-                                        //Debug.Log("camera pos update (camera control)");
                                     }
                                     break;
 
@@ -404,8 +388,6 @@ public class UserControlManager : MonoBehaviour
                                                 // Y軸のみを回転するようにする
                                                 cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
                                             }
-
-                                            //Debug.Log("camera pos update (to closest point)");
                                         }
                                     }
                                     break;
@@ -421,8 +403,6 @@ public class UserControlManager : MonoBehaviour
                             // 移動位置を設定
                             if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f)
                             {
-                                //Debug.Log("camera pos update? (move to point)");
-
                                 if (hitTransform != null)
                                 {
                                     // カメラ位置を更新
@@ -447,14 +427,11 @@ public class UserControlManager : MonoBehaviour
                                     {
                                         eventInvoker.Invoke();
                                     }
-
-                                    //Debug.Log("camera pos update (move to point)");
                                 }
                             }
                             else
                             {
                                 controlState = ControlState.None;
-                                //Debug.Log("camera pos no update (move to point)");
                             }
                             break;
 
@@ -478,9 +455,6 @@ public class UserControlManager : MonoBehaviour
             {
                 // カメラの下方向に向けてRayを照射
                 Ray rayToGround = new Ray(targetCamera.transform.position, - Vector3.up);
-
-                // Debug.DrawRay(rayToGround.origin, rayToGround.direction * 5f, Color.blue, 1.0f);
-
                 RaycastHit groundHit;
 
                 if(Physics.Raycast(rayToGround, out groundHit))
@@ -560,33 +534,16 @@ public class UserControlManager : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        //Debug.Log("Collision");
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
         if(enableCollider && controlState != ControlState.MoveToPoint && CheckObjectIsNotEventObject(other.gameObject.transform))
         {
-            //Debug.Log("Trigger Enter:" + other.gameObject.name);
-
             isBounded = true;
-
-            // 物体からカメラの方向のベクトルを計算
-            //Vector3 reflect = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
-
-            // 目的地を再設定
-            //cameraPosition = targetCamera.transform.position + reflect * 0.5f;
 
             // 物体からカメラの方向のベクトルを計算
             boundDirection = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
         }
-        /*else
-        {
-            Debug.Log("Trigger event object.");
-        }*/
     }
 
     private void OnTriggerStay(Collider other)
@@ -594,17 +551,7 @@ public class UserControlManager : MonoBehaviour
         // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
         if (enableCollider && controlState != ControlState.MoveToPoint && CheckObjectIsNotEventObject(other.gameObject.transform))
         {
-            //Debug.Log("Trigger Stay:" + other.gameObject.name);
-
             isBounded = true;
-
-            // 物体からカメラの方向のベクトルを計算
-            //Vector3 reflect = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
-
-            // 目的地を再設定
-            //cameraPosition = targetCamera.transform.position + reflect * 0.5f;
-
-            //cameraPosition = targetCamera.transform.position + reflectDirection * 0.5f;
 
             // 目的地を再設定
             cameraPosition = targetCamera.transform.position + boundDirection * wallBoundValue;
@@ -615,11 +562,7 @@ public class UserControlManager : MonoBehaviour
     {
         if (enableCollider && CheckObjectIsNotEventObject(other.gameObject.transform))
         {
-            //Debug.Log("Trigger Exit:" + other.gameObject.name);
-
             isBounded = false;
-
-            //boundDirection = Vector3.zero;
         }
     }
     #endregion

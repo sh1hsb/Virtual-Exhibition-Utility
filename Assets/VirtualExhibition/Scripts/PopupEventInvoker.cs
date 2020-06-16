@@ -6,12 +6,8 @@
 //
 // **************************************************
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class PopupEventInvoker : MonoBehaviour
 {
@@ -38,9 +34,6 @@ public class PopupEventInvoker : MonoBehaviour
     {
         // オブジェクトを非表示
         Disappear();
-
-        // スクリーンセンターを取得
-        //screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
 
         // メインUIのRectTransformを取得
         mainUIRectTransform = mainPopupUI.GetComponent<RectTransform>();
