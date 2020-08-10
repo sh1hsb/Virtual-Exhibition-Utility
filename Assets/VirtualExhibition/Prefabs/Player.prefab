@@ -58,7 +58,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -115,16 +115,15 @@ MonoBehaviour:
   fovMin: 30
   fovMax: 80
   enableCollider: 0
-  wallBoundValue: 0.5
+  wallBoundValue: 0.1
   enableGroundStanding: 0
+  stayHeightOnNoGround: 1
   heightFromGround: 1.7
   groundHeightTolerance: 0.05
+  upLiftScale: 0.1
   controllableObjectTag: ControllableObject
   movePointObjectTag: MovePointObject
   popupEventObjectTag: PopupEventObject
-  moveVector: {x: 0, y: 0, z: 0}
-  boundDirection: {x: 0, y: 0, z: 0}
-  isBounded: 0
 --- !u!136 &2128377233143658023
 CapsuleCollider:
   m_ObjectHideFlags: 0

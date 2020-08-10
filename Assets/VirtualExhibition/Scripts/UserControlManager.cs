@@ -71,8 +71,8 @@ public class UserControlManager : MonoBehaviour
     public bool enableGroundStanding;
     public bool stayHeightOnNoGround = true;
     public float heightFromGround = 1.7f;
-    public float groundHeightTolerance = 0.05f;
-    public float upLiftScale = 0.1f;
+    public float groundHeightTolerance = 0.05f; // 地面からの高さに対する許容誤差
+    public float upLiftScale = 0.1f;            // 地面からの高さまで座標を高くする際に急に飛び出したようにしないための移動倍率
 
     [Header("Tags")]
     public string controllableObjectTag = "ControllableObject";
@@ -184,7 +184,13 @@ public class UserControlManager : MonoBehaviour
 
             // カーソル位置からRayを飛ばす
             Ray ray = targetCamera.ScreenPointToRay(cursorPosition);
-            Debug.DrawRay(ray.origin, ray.direction * 10f, Color.red, 3.0f);
+
+            #if UNITY_EDITOR
+            Debug.DrawRay(ray.origin, ray.direction * 10f, Color.red);
+
+            Ray rayToForward = new Ray(targetCamera.transform.position, new Vector3(targetCamera.transform.forward.x, 0f, targetCamera.transform.forward.z));
+            Debug.DrawRay(rayToForward.origin, rayToForward.direction.normalized, Color.blue);
+            #endif
 
             if (!isBounded)
             {
