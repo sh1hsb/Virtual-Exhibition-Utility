@@ -1058,7 +1058,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7102630358866719824, guid: efae27ecca1ee2942b34466b6940e473,
         type: 3}
       propertyPath: m_IsTrigger
@@ -2069,7 +2069,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: -6561420656887829870, guid: e02bf3575d982ee47a920b2efc4a6f83,
         type: 3}
       propertyPath: detectDistance
@@ -2473,7 +2473,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7822218634927018487, guid: 034de20ab55e6dc4489778ee39ecaadd,
         type: 3}
       propertyPath: m_Name
@@ -3816,7 +3816,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 295087495077898252, guid: e02bf3575d982ee47a920b2efc4a6f83,
         type: 3}
       propertyPath: m_Name
@@ -4317,7 +4317,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7822218634927018487, guid: 034de20ab55e6dc4489778ee39ecaadd,
         type: 3}
       propertyPath: m_Name
@@ -5370,7 +5370,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7102630358866719824, guid: efae27ecca1ee2942b34466b6940e473,
         type: 3}
       propertyPath: m_IsTrigger
@@ -5859,7 +5859,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14d0eba3f21c65c43a0e3c32be0a2698, type: 3}
 --- !u!1001 &812516963
@@ -6133,7 +6133,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14d0eba3f21c65c43a0e3c32be0a2698, type: 3}
 --- !u!1 &846414237
@@ -6420,7 +6420,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7102630358866719824, guid: efae27ecca1ee2942b34466b6940e473,
         type: 3}
       propertyPath: m_IsTrigger
@@ -6504,7 +6504,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7822218634927018487, guid: 034de20ab55e6dc4489778ee39ecaadd,
         type: 3}
       propertyPath: m_Name
@@ -8227,7 +8227,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7102630358866719824, guid: efae27ecca1ee2942b34466b6940e473,
         type: 3}
       propertyPath: m_IsTrigger
@@ -9761,7 +9761,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 295087495077898252, guid: e02bf3575d982ee47a920b2efc4a6f83,
         type: 3}
       propertyPath: m_Name
@@ -10843,7 +10843,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7822218634927018487, guid: 034de20ab55e6dc4489778ee39ecaadd,
         type: 3}
       propertyPath: m_Name
@@ -12294,7 +12294,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: 7102630358866719824, guid: efae27ecca1ee2942b34466b6940e473,
         type: 3}
       propertyPath: m_IsTrigger
@@ -13384,9 +13384,9 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1981436084}
   m_PrefabAsset: {fileID: 0}
---- !u!20 &2010819550 stripped
+--- !u!20 &1992465133 stripped
 Camera:
-  m_CorrespondingSourceObject: {fileID: 590215613345901405, guid: e54fbb08e561f2148915202e403e23e3,
+  m_CorrespondingSourceObject: {fileID: 960931474670271700, guid: e54fbb08e561f2148915202e403e23e3,
     type: 3}
   m_PrefabInstance: {fileID: 590215613666902285}
   m_PrefabAsset: {fileID: 0}
@@ -13501,7 +13501,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     - target: {fileID: -6561420656887829870, guid: e02bf3575d982ee47a920b2efc4a6f83,
         type: 3}
       propertyPath: onUserLost.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -14015,7 +14015,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetCamera
       value: 
-      objectReference: {fileID: 2010819550}
+      objectReference: {fileID: 1992465133}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14d0eba3f21c65c43a0e3c32be0a2698, type: 3}
 --- !u!1001 &590215613666902285
@@ -14028,6 +14028,11 @@ PrefabInstance:
     - target: {fileID: 590215613345901379, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
       propertyPath: m_Name
+      value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 590215613345901379, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: m_TagString
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 590215613345901404, guid: e54fbb08e561f2148915202e403e23e3,
@@ -14199,6 +14204,11 @@ PrefabInstance:
         type: 3}
       propertyPath: enableGroundStanding
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9203226130226211491, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: m_TagString
+      value: MainCamera
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e54fbb08e561f2148915202e403e23e3, type: 3}

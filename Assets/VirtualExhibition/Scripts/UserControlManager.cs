@@ -41,7 +41,7 @@ public class UserControlManager : MonoBehaviour
     public ControlState controlState = ControlState.None;
 
     [Header("Camera Control Setting")]
-    public Camera targetCamera;
+    public Camera playerCamera;
     
     [Space(10)]
     public Vector2 rotationSpeed = new Vector2(0.05f, 0.05f);
@@ -100,6 +100,10 @@ public class UserControlManager : MonoBehaviour
     private float touchDistanceDelta;
     private float lastTouchDistance;
     private bool multiTouchEngaged;
+
+
+    private Vector3 rayDir;
+    //private Collider collider;
     #endregion
 
     #region Properties
@@ -115,10 +119,14 @@ public class UserControlManager : MonoBehaviour
     #region Unity API
     void Start()
     {
-        if(targetCamera != null)
+        // 子オブジェクトからカメラを取得
+        playerCamera = GetComponentInChildren<Camera>();
+
+        if(playerCamera != null)
         {
             // 移動目標の位置を現在の位置に設定しておく
-            cameraPosition = targetCamera.transform.position;
+            //cameraPosition = playerCamera.transform.position;
+            cameraPosition = transform.position;
         }
         
         foreach(GameObject obj in autoMovePointObjects)
@@ -129,7 +137,7 @@ public class UserControlManager : MonoBehaviour
 
     void Update()
     {
-        if(targetCamera != null)
+        if(playerCamera != null)
         {
             // 現在のカーソル位置
             Vector3 cursorPosition;
@@ -183,12 +191,13 @@ public class UserControlManager : MonoBehaviour
             }
 
             // カーソル位置からRayを飛ばす
-            Ray ray = targetCamera.ScreenPointToRay(cursorPosition);
+            Ray ray = playerCamera.ScreenPointToRay(cursorPosition);
+            rayDir = ray.direction;
 
             #if UNITY_EDITOR
             Debug.DrawRay(ray.origin, ray.direction * 10f, Color.red);
 
-            Ray rayToForward = new Ray(targetCamera.transform.position, new Vector3(targetCamera.transform.forward.x, 0f, targetCamera.transform.forward.z));
+            Ray rayToForward = new Ray(transform.position, new Vector3(transform.forward.x, 0f, transform.forward.z));
             Debug.DrawRay(rayToForward.origin, rayToForward.direction.normalized, Color.blue);
             #endif
 
@@ -222,7 +231,9 @@ public class UserControlManager : MonoBehaviour
                             else if (hitTransform.CompareTag(movePointObjectTag))
                             {
                                 controlState = ControlState.MoveToPoint;
-                                cameraAngle = targetCamera.transform.localEulerAngles;
+                                //cameraAngle = playerCamera.transform.localEulerAngles;
+                                cameraAngle.x = playerCamera.transform.localEulerAngles.x;
+                                cameraAngle.y = transform.localEulerAngles.y;
                             }
                             // "PopupEventObject"
                             else if (hitTransform.CompareTag(popupEventObjectTag))
@@ -240,20 +251,26 @@ public class UserControlManager : MonoBehaviour
                                 else
                                 {
                                     controlState = ControlState.CameraControl;
-                                    cameraAngle = targetCamera.transform.localEulerAngles;
+                                    //cameraAngle = playerCamera.transform.localEulerAngles;
+                                    cameraAngle.x = playerCamera.transform.localEulerAngles.x;
+                                    cameraAngle.y = transform.localEulerAngles.y;
                                 }
                             }
                             // タグなし
                             else
                             {
                                 controlState = ControlState.CameraControl;
-                                cameraAngle = targetCamera.transform.localEulerAngles;
+                                //cameraAngle = playerCamera.transform.localEulerAngles;
+                                cameraAngle.x = playerCamera.transform.localEulerAngles.x;
+                                cameraAngle.y = transform.localEulerAngles.y;
                             }
                         }
                         else
                         {
                             controlState = ControlState.CameraControl;
-                            cameraAngle = targetCamera.transform.localEulerAngles;
+                            //cameraAngle = playerCamera.transform.localEulerAngles;
+                            cameraAngle.x = playerCamera.transform.localEulerAngles.x;
+                            cameraAngle.y = transform.localEulerAngles.y;
                         }
 
                         // カーソル位置を取得し初期値とする
@@ -265,7 +282,9 @@ public class UserControlManager : MonoBehaviour
                     // 移動しきっていない状態でクリックしてしまったときに対する処理
                     else if (controlState == ControlState.MoveToPoint)
                     {
-                        cameraAngle = targetCamera.transform.localEulerAngles;
+                        //cameraAngle = playerCamera.transform.localEulerAngles;
+                        cameraAngle.x = playerCamera.transform.localEulerAngles.x;
+                        cameraAngle.y = transform.localEulerAngles.y;
                         initialMousePosition = cursorPosition;
                         lastMousePosition = cursorPosition;
                     }
@@ -297,7 +316,12 @@ public class UserControlManager : MonoBehaviour
                             cameraAngle.x += (reverseRotationVertical ? -1 : 1) * (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
 
                             // オブジェクトに回転を適用
-                            targetCamera.transform.localEulerAngles = cameraAngle;
+                            //playerCamera.transform.localEulerAngles = cameraAngle;
+                            //playerCamera.transform.localEulerAngles.x = cameraAngle.x;
+                            //transform.localEulerAngles.y = cameraAngle.x;
+
+                            playerCamera.transform.localEulerAngles = new Vector3(cameraAngle.x, playerCamera.transform.localEulerAngles.y, playerCamera.transform.localEulerAngles.z);
+                            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, cameraAngle.y, transform.localEulerAngles.z);
                             break;
 
                         case ControlState.ObjectControl:
@@ -346,7 +370,8 @@ public class UserControlManager : MonoBehaviour
 
                                     if (Vector2.Distance(initialMousePosition, lastMousePosition) < 0.1f && autoMovePointObjects.Count > 0)
                                     {
-                                        Vector3 detectOrigin = targetCamera.transform.position + ray.direction * closestAutoMovePointDetectOriginDistance;
+                                        //Vector3 detectOrigin = playerCamera.transform.position + ray.direction * closestAutoMovePointDetectOriginDistance;
+                                        Vector3 detectOrigin = transform.position + ray.direction * closestAutoMovePointDetectOriginDistance;
 
                                         GameObject target = null;
                                         float minDistance = 100f;
@@ -364,7 +389,8 @@ public class UserControlManager : MonoBehaviour
                                             float dist = Vector3.Distance(detectOrigin, obj.transform.position);
 
                                             // 距離が近く、カメラの前方にあればターゲット判定する
-                                            if (dist < minDistance && Vector3.Dot((obj.transform.position - targetCamera.transform.position).normalized, targetCamera.transform.forward) > forwardClosestAutoMovePointDetectRange)
+                                            //if (dist < minDistance && Vector3.Dot((obj.transform.position - playerCamera.transform.position).normalized, playerCamera.transform.forward) > forwardClosestAutoMovePointDetectRange)
+                                            if (dist < minDistance && Vector3.Dot((obj.transform.position - transform.position).normalized, transform.forward) > forwardClosestAutoMovePointDetectRange)
                                             {
                                                 minDistance = dist;
                                                 target = obj;
@@ -380,16 +406,19 @@ public class UserControlManager : MonoBehaviour
                                             controlState = ControlState.MoveToPoint;
 
                                             // カメラ位置を更新
-                                            cameraPosition = new Vector3(target.transform.position.x, targetCamera.transform.position.y, target.transform.position.z);
+                                            //cameraPosition = new Vector3(target.transform.position.x, playerCamera.transform.position.y, target.transform.position.z);
+                                            cameraPosition = new Vector3(target.transform.position.x, transform.position.y, target.transform.position.z);
 
                                             // 移動方向を向く
                                             if (lookAtMovePointOnMove)
                                             {
                                                 // 目的の方向へ向くための回転を計算
-                                                Vector3 targetRot = Quaternion.LookRotation(target.transform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
+                                                //Vector3 targetRot = Quaternion.LookRotation(target.transform.position - playerCamera.transform.position, Vector3.up).eulerAngles;
+                                                Vector3 targetRot = Quaternion.LookRotation(target.transform.position - transform.position, Vector3.up).eulerAngles;
 
                                                 // 現在の姿勢を取得
-                                                Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
+                                                //Vector3 currentRot = playerCamera.transform.rotation.eulerAngles;
+                                                Vector3 currentRot = transform.rotation.eulerAngles;
 
                                                 // Y軸のみを回転するようにする
                                                 cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
@@ -412,16 +441,19 @@ public class UserControlManager : MonoBehaviour
                                 if (hitTransform != null)
                                 {
                                     // カメラ位置を更新
-                                    cameraPosition = new Vector3(hitTransform.position.x, targetCamera.transform.position.y, hitTransform.position.z);
+                                    //cameraPosition = new Vector3(hitTransform.position.x, playerCamera.transform.position.y, hitTransform.position.z);
+                                    cameraPosition = new Vector3(hitTransform.position.x, transform.position.y, hitTransform.position.z);
 
                                     // 移動方向を向く
                                     if (lookAtMovePointOnMove)
                                     {
                                         // 目的の方向へ向くための回転を計算
-                                        Vector3 targetRot = Quaternion.LookRotation(hitTransform.position - targetCamera.transform.position, Vector3.up).eulerAngles;
+                                        //Vector3 targetRot = Quaternion.LookRotation(hitTransform.position - playerCamera.transform.position, Vector3.up).eulerAngles;
+                                        Vector3 targetRot = Quaternion.LookRotation(hitTransform.position - transform.position, Vector3.up).eulerAngles;
 
                                         // 現在の姿勢を取得
-                                        Vector3 currentRot = targetCamera.transform.rotation.eulerAngles;
+                                        //Vector3 currentRot = playerCamera.transform.rotation.eulerAngles;
+                                        Vector3 currentRot = transform.rotation.eulerAngles;
 
                                         // Y軸のみを回転するようにする
                                         cameraPose = Quaternion.Euler(currentRot.x, targetRot.y, currentRot.z);
@@ -460,7 +492,8 @@ public class UserControlManager : MonoBehaviour
             if (enableGroundStanding)
             {
                 // カメラの下方向に向けてRayを照射
-                Ray rayToGround = new Ray(targetCamera.transform.position, - Vector3.up);
+                //Ray rayToGround = new Ray(playerCamera.transform.position, - Vector3.up);
+                Ray rayToGround = new Ray(transform.position, -Vector3.up);
                 RaycastHit groundHit;
 
                 if(Physics.Raycast(rayToGround, out groundHit))
@@ -493,21 +526,46 @@ public class UserControlManager : MonoBehaviour
 
 
             // カメラの位置・姿勢を更新
-            if (Vector3.Distance(targetCamera.transform.position, cameraPosition) > 0.01f)
+            /*if (Vector3.Distance(playerCamera.transform.position, cameraPosition) > 0.01f)
             {
                 // 位置を更新
-                targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, cameraPosition, moveSmoothing);
+                playerCamera.transform.position = Vector3.Lerp(playerCamera.transform.position, cameraPosition, moveSmoothing);
 
                 // 姿勢を更新
                 if(controlState == ControlState.MoveToPoint && lookAtMovePointOnMove)
                 {
-                    targetCamera.transform.rotation = Quaternion.Lerp(targetCamera.transform.rotation, cameraPose, 0.1f);
+                    playerCamera.transform.rotation = Quaternion.Lerp(playerCamera.transform.rotation, cameraPose, 0.1f);
                 }
 
                 // 目的地に到着したら
-                if(Vector3.Distance(targetCamera.transform.position, cameraPosition) <= 0.01f)
+                if(Vector3.Distance(playerCamera.transform.position, cameraPosition) <= 0.01f)
                 {
-                    targetCamera.transform.position = cameraPosition;
+                    playerCamera.transform.position = cameraPosition;
+
+                    // 移動完了前にクリックしていた場合に状態が切り替わらないため、ここでCameraControlに状態変更する
+                    if (controlState == ControlState.MoveToPoint)
+                    {
+                        //controlState = ControlState.None;
+                        controlState = ControlState.CameraControl;
+                    }
+                }
+            }*/
+
+            if (Vector3.Distance(transform.position, cameraPosition) > 0.01f)
+            {
+                // 位置を更新
+                transform.position = Vector3.Lerp(transform.position, cameraPosition, moveSmoothing);
+
+                // 姿勢を更新
+                if (controlState == ControlState.MoveToPoint && lookAtMovePointOnMove)
+                {
+                    transform.rotation = Quaternion.Lerp(transform.rotation, cameraPose, 0.1f);
+                }
+
+                // 目的地に到着したら
+                if (Vector3.Distance(transform.position, cameraPosition) <= 0.01f)
+                {
+                    transform.position = cameraPosition;
 
                     // 移動完了前にクリックしていた場合に状態が切り替わらないため、ここでCameraControlに状態変更する
                     if (controlState == ControlState.MoveToPoint)
@@ -525,16 +583,16 @@ public class UserControlManager : MonoBehaviour
 
                 if(touchState == TouchState.Multi)
                 {
-                    camFOV = targetCamera.fieldOfView - touchDistanceDelta * fovPinchRate;
+                    camFOV = playerCamera.fieldOfView - touchDistanceDelta * fovPinchRate;
                 }
                 else
                 {
-                    camFOV = targetCamera.fieldOfView + Input.GetAxis("Mouse ScrollWheel") * fovRate;
+                    camFOV = playerCamera.fieldOfView + Input.GetAxis("Mouse ScrollWheel") * fovRate;
                 }
 
                 if (camFOV >= fovMin && camFOV <= fovMax)
                 {
-                    targetCamera.fieldOfView = camFOV;
+                    playerCamera.fieldOfView = camFOV;
                 }
             }
         }
@@ -548,7 +606,8 @@ public class UserControlManager : MonoBehaviour
             isBounded = true;
 
             // 物体からカメラの方向のベクトルを計算
-            boundDirection = (targetCamera.transform.position - new Vector3(other.gameObject.transform.position.x, targetCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
+            //boundDirection = (playerCamera.transform.position - new Vector3(other.gameObject.transform.position.x, playerCamera.transform.position.y, other.gameObject.transform.position.z)).normalized;
+            boundDirection = (transform.position - new Vector3(other.gameObject.transform.position.x, transform.position.y, other.gameObject.transform.position.z)).normalized;
         }
     }
 
@@ -560,7 +619,8 @@ public class UserControlManager : MonoBehaviour
             isBounded = true;
 
             // 目的地を再設定
-            cameraPosition = targetCamera.transform.position + boundDirection * wallBoundValue;
+            //cameraPosition = playerCamera.transform.position + boundDirection * wallBoundValue;
+            cameraPosition = transform.position + boundDirection * wallBoundValue;
         }
     }
 
@@ -583,9 +643,10 @@ public class UserControlManager : MonoBehaviour
 
     public void WarpTo(Vector3 position)
     {
-        if (targetCamera != null)
+        if (playerCamera != null)
         {
-            targetCamera.transform.position = position;
+            //playerCamera.transform.position = position;
+            transform.position = position;
             cameraPosition = position;
         }
     }
@@ -614,4 +675,36 @@ public class UserControlManager : MonoBehaviour
         }
     }
     #endregion
+
+    
+    void OnDrawGizmos()
+    {
+        var radius = 0.5f;
+
+        Vector3 houkou = new Vector3(rayDir.x, 0f, rayDir.z);
+
+        Vector3 spherePos = transform.rotation * new Vector3(0f, 1f - radius, 0f);
+
+        //Vector3 fw = new Vector3(playerCamera.transform.forward.x, 0f, playerCamera.transform.forward.z);
+
+        var isHit = Physics.CapsuleCast(transform.position + spherePos, transform.position - spherePos, radius, houkou, out hit, moveRate);
+
+        if (isHit)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, transform.forward * hit.distance);
+            //Gizmos.DrawWireSphere(transform.position + transform.forward * (hit.distance) + spherePos, radius);
+            //Gizmos.DrawWireSphere(transform.position + transform.forward * (hit.distance) - spherePos, radius);
+        }
+        else
+        {
+            Gizmos.color = Color.green;
+            //Gizmos.DrawWireSphere(transform.position + rayDir * moveRate + spherePos, radius);
+            //Gizmos.DrawWireSphere(transform.position + rayDir * moveRate - spherePos, radius);
+        }
+
+        Gizmos.DrawWireSphere(transform.position + spherePos + houkou * moveRate, radius);
+        Gizmos.DrawWireSphere(transform.position - spherePos + houkou * moveRate, radius);
+    }
+
 }

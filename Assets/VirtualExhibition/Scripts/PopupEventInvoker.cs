@@ -69,7 +69,7 @@ public class PopupEventInvoker : MonoBehaviour
                     if (mainUIRectTransform != null) 
                     {
                         // スクリーン座標を取得
-                        var screenPos = RectTransformUtility.WorldToScreenPoint(cameraController.targetCamera, this.transform.position);
+                        var screenPos = RectTransformUtility.WorldToScreenPoint(cameraController.playerCamera, this.transform.position);
 
                         // UIがスクリーンからはみ出ないように位置調整
                         if (screenPos.x + mainUIRectTransform.sizeDelta.x * mainUICanvas.scaleFactor / 2f > Screen.width)
