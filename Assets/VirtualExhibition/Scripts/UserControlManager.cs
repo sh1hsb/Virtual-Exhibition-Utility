@@ -115,6 +115,7 @@ public class UserControlManager : MonoBehaviour
     private float colliderHeight;
     private Vector3 colliderCenter;
     private int colliderDirection = -1;
+    private Vector3 capsuleSpherePos;
     #endregion
 
     #region Properties
@@ -159,6 +160,25 @@ public class UserControlManager : MonoBehaviour
                 colliderHeight = c.height;
                 colliderCenter = c.center;
                 colliderDirection = c.direction;
+
+                switch (colliderDirection)
+                {
+                    case 0: // x
+                        capsuleSpherePos = new Vector3(colliderHeight / 2 - colliderRadius, 0f, 0f);
+                        break;
+
+                    case 1: // y
+                        capsuleSpherePos = new Vector3(0f, colliderHeight / 2 - colliderRadius, 0f);
+                        break;
+
+                    case 2: // z
+                        capsuleSpherePos = new Vector3(0f, 0f, colliderHeight / 2 - colliderRadius);
+                        break;
+
+                    default:
+                        capsuleSpherePos = Vector3.zero;
+                        break;
+                }
             }
             else
             {
@@ -553,7 +573,7 @@ public class UserControlManager : MonoBehaviour
             {
                 // 位置を更新
                 // 移動ポイントへ移動するとき以外は移動後に他のオブジェクトに衝突するかどうかをチェックし、衝突する場合は現在の場所を目的地にする
-                if (controlState != ControlState.MoveToPoint && CheckPlayerIsGoingToCollide(cameraPosition - transform.position))
+                if (controlState != ControlState.MoveToPoint && enableCollider &&CheckPlayerIsGoingToCollide(cameraPosition - transform.position))
                 {
                     cameraPosition = transform.position;
                 }
@@ -749,29 +769,8 @@ public class UserControlManager : MonoBehaviour
 
             case ColliderType.Capsule:
 
-                Vector3 spherePos;
-
-                switch (colliderDirection)
-                {
-                    case 0: // x
-                        spherePos = transform.rotation * new Vector3(colliderHeight / 2 - colliderRadius, 0f, 0f);
-                        break;
-
-                    case 1: // y
-                        spherePos = transform.rotation * new Vector3(0f, colliderHeight / 2 - colliderRadius, 0f);
-                        break;
-
-                    case 2: // z
-                        spherePos = transform.rotation * new Vector3(0f, 0f, colliderHeight / 2 - colliderRadius);
-                        break;
-
-                    default:
-                        spherePos = Vector3.zero;
-                        break;
-                }
-
-                return Physics.CapsuleCast(transform.position + transform.rotation * colliderCenter + spherePos, 
-                                           transform.position + transform.rotation * colliderCenter - spherePos, 
+                return Physics.CapsuleCast(transform.position + transform.rotation * colliderCenter + transform.rotation * capsuleSpherePos, 
+                                           transform.position + transform.rotation * colliderCenter - transform.rotation * capsuleSpherePos, 
                                            colliderRadius, 
                                            direction, 
                                            out hit, 
