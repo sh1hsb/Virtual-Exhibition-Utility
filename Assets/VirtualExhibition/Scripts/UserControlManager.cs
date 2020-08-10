@@ -35,6 +35,14 @@ public class UserControlManager : MonoBehaviour
         Freewalk,
         ToClosestAutoMovePoint
     }
+
+    public enum ColliderType
+    {
+        None,
+        Sphere,
+        Capsule,
+        Others
+    }
     #endregion
 
     #region Public and Serialized Fields
@@ -102,8 +110,20 @@ public class UserControlManager : MonoBehaviour
     private bool multiTouchEngaged;
 
 
-    private Vector3 rayDir;
-    //private Collider collider;
+    //private Vector3 rayDir;
+
+
+
+    private Collider playerCollider;
+    private ColliderType playerColliderType = ColliderType.None;
+    private float colliderRadius;
+    private float colliderHeight;
+    private Vector3 colliderCenter;
+    private int colliderDirection = -1;
+
+    //private Vector3 moveDirection;
+
+    //private List<Collider> colliderList = new List<Collider>();
     #endregion
 
     #region Properties
@@ -127,6 +147,40 @@ public class UserControlManager : MonoBehaviour
             // 移動目標の位置を現在の位置に設定しておく
             //cameraPosition = playerCamera.transform.position;
             cameraPosition = transform.position;
+        }
+
+        // Colliderを取得
+        playerCollider = GetComponent<Collider>();
+
+        if(playerCollider != null)
+        {
+            if(playerCollider is SphereCollider)
+            {
+                Debug.Log("Sphere");
+                playerColliderType = ColliderType.Sphere;
+                SphereCollider c = GetComponent<SphereCollider>();
+                colliderRadius = c.radius;
+                colliderCenter = c.center;
+            }
+            else if(playerCollider is CapsuleCollider)
+            {
+                Debug.Log("Capsule");
+                playerColliderType = ColliderType.Capsule;
+                CapsuleCollider c = GetComponent<CapsuleCollider>();
+                colliderRadius = c.radius;
+                colliderHeight = c.height;
+                colliderCenter = c.center;
+                colliderDirection = c.direction;
+            }
+            else
+            {
+                Debug.Log("Others");
+                playerColliderType = ColliderType.Others;
+            }
+        }
+        else
+        {
+            Debug.Log("No Collider");
         }
         
         foreach(GameObject obj in autoMovePointObjects)
@@ -192,7 +246,7 @@ public class UserControlManager : MonoBehaviour
 
             // カーソル位置からRayを飛ばす
             Ray ray = playerCamera.ScreenPointToRay(cursorPosition);
-            rayDir = ray.direction;
+            //rayDir = ray.direction;
 
             #if UNITY_EDITOR
             Debug.DrawRay(ray.origin, ray.direction * 10f, Color.red);
@@ -554,7 +608,15 @@ public class UserControlManager : MonoBehaviour
             if (Vector3.Distance(transform.position, cameraPosition) > 0.01f)
             {
                 // 位置を更新
-                transform.position = Vector3.Lerp(transform.position, cameraPosition, moveSmoothing);
+                // 移動ポイントへ移動するとき以外は移動後に他のオブジェクトに衝突するかどうかをチェックし、衝突する場合は現在の場所を目的地にする
+                if (controlState != ControlState.MoveToPoint && CheckPlayerIsGoingToCollide(cameraPosition - transform.position))
+                {
+                    cameraPosition = transform.position;
+                }
+                else
+                {
+                    transform.position = Vector3.Lerp(transform.position, cameraPosition, moveSmoothing);
+                }
 
                 // 姿勢を更新
                 if (controlState == ControlState.MoveToPoint && lookAtMovePointOnMove)
@@ -674,9 +736,63 @@ public class UserControlManager : MonoBehaviour
             return true;
         }
     }
+
+    /// <summary>
+    /// プレイヤーオブジェクトが他のオブジェクトに衝突するかどうかを調べる
+    /// </summary>
+    /// <param name="direction"></param>
+    /// <returns></returns>
+    private bool CheckPlayerIsGoingToCollide(Vector3 direction)
+    {
+        RaycastHit hit;
+
+        switch (playerColliderType)
+        {
+            case ColliderType.Sphere:
+
+                return Physics.SphereCast(transform.position + transform.rotation * colliderCenter, 
+                                          colliderRadius, 
+                                          direction, 
+                                          out hit, 
+                                          moveRate * moveSmoothing);
+
+            case ColliderType.Capsule:
+
+                Vector3 spherePos;
+
+                switch (colliderDirection)
+                {
+                    case 0: // x
+                        spherePos = transform.rotation * new Vector3(colliderHeight / 2 - colliderRadius, 0f, 0f);
+                        break;
+
+                    case 1: // y
+                        spherePos = transform.rotation * new Vector3(0f, colliderHeight / 2 - colliderRadius, 0f);
+                        break;
+
+                    case 2: // z
+                        spherePos = transform.rotation * new Vector3(0f, 0f, colliderHeight / 2 - colliderRadius);
+                        break;
+
+                    default:
+                        spherePos = Vector3.zero;
+                        break;
+                }
+
+                return Physics.CapsuleCast(transform.position + transform.rotation * colliderCenter + spherePos, 
+                                           transform.position + transform.rotation * colliderCenter - spherePos, 
+                                           colliderRadius, 
+                                           direction, 
+                                           out hit, 
+                                           moveRate * moveSmoothing);
+
+            default:
+                return false;
+        }
+    }
     #endregion
 
-    
+    /*
     void OnDrawGizmos()
     {
         var radius = 0.5f;
@@ -686,13 +802,14 @@ public class UserControlManager : MonoBehaviour
         Vector3 spherePos = transform.rotation * new Vector3(0f, 1f - radius, 0f);
 
         //Vector3 fw = new Vector3(playerCamera.transform.forward.x, 0f, playerCamera.transform.forward.z);
+        RaycastHit hitt;
 
-        var isHit = Physics.CapsuleCast(transform.position + spherePos, transform.position - spherePos, radius, houkou, out hit, moveRate);
+        var isHit = Physics.CapsuleCast(transform.position + spherePos, transform.position - spherePos, radius, houkou, out hitt, moveRate * moveSmoothing);
 
         if (isHit)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawRay(transform.position, transform.forward * hit.distance);
+            //Gizmos.DrawRay(transform.position, transform.forward * hitt.distance);
             //Gizmos.DrawWireSphere(transform.position + transform.forward * (hit.distance) + spherePos, radius);
             //Gizmos.DrawWireSphere(transform.position + transform.forward * (hit.distance) - spherePos, radius);
         }
@@ -703,8 +820,23 @@ public class UserControlManager : MonoBehaviour
             //Gizmos.DrawWireSphere(transform.position + rayDir * moveRate - spherePos, radius);
         }
 
-        Gizmos.DrawWireSphere(transform.position + spherePos + houkou * moveRate, radius);
-        Gizmos.DrawWireSphere(transform.position - spherePos + houkou * moveRate, radius);
-    }
+        Gizmos.DrawWireSphere(transform.position + spherePos + houkou * moveRate * moveSmoothing, radius);
+        Gizmos.DrawWireSphere(transform.position - spherePos + houkou * moveRate * moveSmoothing, radius);
+
+        RaycastHit shHit;
+
+        var isShHit = Physics.SphereCast(transform.position, radius, houkou, out shHit, moveRate * moveSmoothing);
+
+        if (isShHit)
+        {
+            Gizmos.color = Color.yellow;
+        }
+        else
+        {
+            Gizmos.color = Color.cyan;
+        }
+
+        Gizmos.DrawWireSphere(transform.position + houkou * moveRate * moveSmoothing, radius);
+    }*/
 
 }
