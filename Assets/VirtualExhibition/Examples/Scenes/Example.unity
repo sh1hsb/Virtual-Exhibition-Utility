@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 170076734}
-  m_IndirectSpecularColor: {r: 0.44657975, g: 0.4964143, b: 0.57481766, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657922, g: 0.49641347, b: 0.5748169, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2056,7 +2056,7 @@ VideoPlayer:
   m_AudioOutputMode: 2
   m_TargetAudioSources: []
   m_DirectAudioVolumes: []
-  m_Url: cat.mp4
+  m_Url: movie.mp4
   m_EnabledAudioTracks: 
   m_DirectAudioMutes: 
   m_ControlledAudioTrackCount: 0
@@ -4909,7 +4909,7 @@ PrefabInstance:
     - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
       propertyPath: stayHeightOnNoGround
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9203226130226211491, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}

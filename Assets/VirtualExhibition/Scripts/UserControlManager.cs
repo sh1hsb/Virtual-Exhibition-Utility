@@ -95,7 +95,6 @@ public class UserControlManager : MonoBehaviour
     private Vector2 initialMousePosition;
     private Vector2 lastMousePosition;
     private Quaternion cameraPose;
-    private Vector3 boundDirection;
     private bool isBounded;
 
     private RaycastHit hit;
@@ -540,23 +539,46 @@ public class UserControlManager : MonoBehaviour
             {
                 // カメラの下方向に向けてRayを照射
                 Ray rayToGround = new Ray(transform.position, -Vector3.up);
-                RaycastHit groundHit;
 
-                if(Physics.Raycast(rayToGround, out groundHit))
+                // イベントオブジェクトが足元に来ることを考慮してすべてのオブジェクトに対してRayを飛ばす
+                RaycastHit[] groundHits = Physics.RaycastAll(rayToGround);
+
+                if(groundHits.Length > 0)
                 {
-                    if (CheckObjectIsNotEventObject(groundHit.transform))
+                    float firstGroundDistance = 100f;
+                    bool groundDetect = false;
+
+                    // イベントオブジェクトでないオブジェクトまでの距離を測定し一番近くにあるものを地面とみなす
+                    foreach (RaycastHit hit in groundHits)
+                    {
+                        if (CheckObjectIsNotEventObject(hit.transform) && hit.distance < firstGroundDistance)
+                        {
+                            firstGroundDistance = hit.distance;
+                            groundDetect = true;
+                        }
+                    }
+
+                    if (groundDetect)
                     {
                         // 激しくバウンドするのを防ぐため誤差値を考慮して挙動を制御
-                        if (groundHit.distance > heightFromGround + groundHeightTolerance )
+                        if (firstGroundDistance > heightFromGround + groundHeightTolerance)
                         {
-                            // 地面に接していない場合は重力による自由落下
-                            cameraPosition.y += -9.8f * Time.deltaTime;
+                            // 地面から目標高さより2倍以上浮いている場合は重力による自由落下
+                            if (firstGroundDistance > heightFromGround * 2f)
+                            {
+                                cameraPosition.y += -9.8f * Time.deltaTime;
+                            }
+                            // 地面から目標高さより2倍以下の場合は距離と調整倍率により高さを制御
+                            else
+                            {
+                                cameraPosition.y += (heightFromGround - firstGroundDistance) * upLiftScale;
+                            }                            
                         }
-                        else if (groundHit.distance < heightFromGround - groundHeightTolerance)
+                        else if (firstGroundDistance < heightFromGround - groundHeightTolerance)
                         {
                             // 地面にめり込んでいる場合はめり込まないように位置を調整
                             // いきなり飛び出した感じにならないように倍率調整する
-                            cameraPosition.y += (heightFromGround - groundHit.distance) * upLiftScale;
+                            cameraPosition.y += (heightFromGround - firstGroundDistance) * upLiftScale;
                         }
                     }
                 }
@@ -568,6 +590,7 @@ public class UserControlManager : MonoBehaviour
                         cameraPosition.y += -9.8f * Time.deltaTime;
                     }
                 }
+
             }
 
 
@@ -580,10 +603,8 @@ public class UserControlManager : MonoBehaviour
                 {
                     cameraPosition = transform.position;
                 }
-                else
-                {
-                    transform.position = Vector3.Lerp(transform.position, cameraPosition, moveSmoothing);
-                }
+
+                transform.position = Vector3.Lerp(transform.position, cameraPosition, moveSmoothing);
 
                 // 姿勢を更新
                 if (controlState == ControlState.MoveToPoint && lookAtMovePointOnMove)
@@ -599,7 +620,6 @@ public class UserControlManager : MonoBehaviour
                     // 移動完了前にクリックしていた場合に状態が切り替わらないため、ここでCameraControlに状態変更する
                     if (controlState == ControlState.MoveToPoint)
                     {
-                        //controlState = ControlState.None;
                         controlState = ControlState.CameraControl;
                     }
                 }
@@ -627,17 +647,11 @@ public class UserControlManager : MonoBehaviour
         }
     }
 
+    /*
     private void OnTriggerEnter(Collider other)
     {
-        // MovePoint等のイベント発生用オブジェクト以外のときは当たり判定をとり、物体をすり抜けないようにする
-        if(enableCollider && controlState != ControlState.MoveToPoint && CheckObjectIsNotEventObject(other.gameObject.transform))
-        {
-            isBounded = true;
 
-            // 物体からカメラの方向のベクトルを計算
-            boundDirection = (transform.position - new Vector3(other.gameObject.transform.position.x, transform.position.y, other.gameObject.transform.position.z)).normalized;
-        }
-    }
+    }*/
 
     private void OnTriggerStay(Collider other)
     {
@@ -646,8 +660,11 @@ public class UserControlManager : MonoBehaviour
         {
             isBounded = true;
 
-            // 目的地を再設定
-            cameraPosition = transform.position + boundDirection * wallBoundValue;
+            // 跳ね返り方向を計算
+            Vector3 boundDirection = (transform.position - new Vector3(other.gameObject.transform.position.x, transform.position.y, other.gameObject.transform.position.z)).normalized;
+
+            // 目的地を衝突したものから離れるように設定
+            cameraPosition += boundDirection * wallBoundValue;
         }
     }
 
