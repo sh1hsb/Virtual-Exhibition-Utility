@@ -7,6 +7,7 @@
 // **************************************************
 
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -194,7 +195,12 @@ public class UserControlManager : MonoBehaviour
         {
             enableCollider = false;
         }
-        
+
+        // タグ登録をチェック
+        #if UNITY_EDITOR
+        RegisterTags(true);
+        #endif
+
         // 自動移動ポイントのオブジェクトのタグを変更
         foreach(GameObject obj in autoMovePointObjects)
         {
@@ -831,6 +837,56 @@ public class UserControlManager : MonoBehaviour
         else if (cameraAngle.x < 270f && !(cameraAngle.x >= 0f && cameraAngle.x <= 180f))
         {
             cameraAngle.x = 270f;
+        }
+    }
+
+    /// <summary>
+    /// タグを登録する
+    /// </summary>
+    public void RegisterTags(bool onStart)
+    {
+        Object[] asset = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset");
+
+        if ((asset != null) && (asset.Length > 0))
+        {
+            SerializedObject so = new SerializedObject(asset[0]);
+            SerializedProperty tags = so.FindProperty("tags");
+
+            List<string> tagList = new List<string>();
+            tagList.Add(controllableObjectTag);
+            tagList.Add(movePointObjectTag);
+            tagList.Add(popupEventObjectTag);
+
+            foreach(string tagName in tagList)
+            {
+                bool hasExist = false;
+
+                for (int i = 0; i < tags.arraySize; ++i)
+                {
+                    if (tags.GetArrayElementAtIndex(i).stringValue == tagName)
+                    {
+                        hasExist = true;
+                        break;
+                    }
+                }
+
+                if (hasExist) continue;
+
+                int index = tags.arraySize;
+                tags.InsertArrayElementAtIndex(index);
+                tags.GetArrayElementAtIndex(index).stringValue = tagName;
+                so.ApplyModifiedProperties();
+                so.Update();
+
+                if (onStart)
+                {
+                    Debug.LogWarning("Tag : " + tagName + " is not registered! Register tag after you finish playing it in the editor.");
+                }
+                else
+                {
+                    Debug.Log("Register Tag : " + tagName);
+                }
+            }
         }
     }
     #endregion
