@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Shinichi Hasebe
+  companyName: sh1hsb
   productName: Virtual Exhibition Utility
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -331,7 +331,8 @@ PlayerSettings:
   openGLRequireES31: 0
   openGLRequireES31AEP: 0
   openGLRequireES32: 0
-  m_TemplateCustomTags: {}
+  m_TemplateCustomTags:
+    PUBLISHER: Your Company
   mobileMTRendering:
     Android: 1
     iPhone: 1
