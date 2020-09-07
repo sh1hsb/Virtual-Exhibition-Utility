@@ -46,7 +46,7 @@ public class UserControlManager : MonoBehaviour
     #endregion
 
     #region Public and Serialized Fields
-    public ControlState controlState = ControlState.None;
+    [SerializeField] private ControlState controlState = ControlState.None;
 
     [Header("Camera Control Setting")]
     public Camera playerCamera;
@@ -140,6 +140,9 @@ public class UserControlManager : MonoBehaviour
             // 移動目標の位置を現在の位置に設定しておく
             cameraPosition = transform.position;
         }
+
+        // 状態の初期化
+        controlState = ControlState.None;
 
         // Colliderを取得
         playerCollider = GetComponent<Collider>();
@@ -730,7 +733,11 @@ public class UserControlManager : MonoBehaviour
 
     public void MoveTo(Vector3 position)
     {
-        cameraPosition = position;
+        if (playerCamera != null)
+        {
+            controlState = ControlState.MoveToPoint;
+            cameraPosition = position;
+        }
     }
     #endregion
 
