@@ -71,4 +71,5 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 *.mp4
-/Assets/TextMesh Pro
+TextMesh Pro
+TextMesh Pro.meta
