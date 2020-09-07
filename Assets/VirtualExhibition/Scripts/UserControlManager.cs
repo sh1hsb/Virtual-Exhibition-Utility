@@ -378,9 +378,12 @@ public class UserControlManager : MonoBehaviour
                             cameraAngle.y += (reverseRotationHorizontal ? -1 : 1) * (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
                             cameraAngle.x += (reverseRotationVertical ? -1 : 1) * (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
 
+                            // カメラのx軸の角度をチェック
+                            CheckCameraXAngle();
+
                             // オブジェクトに回転を適用
-                            playerCamera.transform.localEulerAngles = new Vector3(cameraAngle.x, playerCamera.transform.localEulerAngles.y, playerCamera.transform.localEulerAngles.z);
                             transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, cameraAngle.y, transform.localEulerAngles.z);
+                            playerCamera.transform.localEulerAngles = new Vector3(cameraAngle.x, playerCamera.transform.localEulerAngles.y, playerCamera.transform.localEulerAngles.z);
                             break;
 
                         case ControlState.ObjectControl:
@@ -802,6 +805,32 @@ public class UserControlManager : MonoBehaviour
         else
         {
             return hitResult;
+        }
+    }
+
+    /// <summary>
+    /// カメラのx軸の角度をチェックしてジンバルロックと視点がひっくり返ることを防止する
+    /// </summary>
+    private void CheckCameraXAngle()
+    {
+        // x軸の角度の値を 0°<=θ<= 360°に補正
+        if (cameraAngle.x < 0f)
+        {
+            cameraAngle.x += 360f * (1f - (int)(cameraAngle.x / 360f));
+        }
+        else if (cameraAngle.x > 360f)
+        {
+            cameraAngle.x -= 360f * (int)(cameraAngle.x / 360f);
+        }
+
+        // 逆さまにならないように回転範囲を制限
+        if (cameraAngle.x > 90f && !(cameraAngle.x >= 180f && cameraAngle.x <= 360f))
+        {
+            cameraAngle.x = 90f;
+        }
+        else if (cameraAngle.x < 270f && !(cameraAngle.x >= 0f && cameraAngle.x <= 180f))
+        {
+            cameraAngle.x = 270f;
         }
     }
     #endregion
