@@ -49,7 +49,7 @@ public class UserControlManager : MonoBehaviour
     #region Public and Serialized Fields
     [SerializeField] private ControlState controlState = ControlState.None;
 
-    [Header("Camera Control Setting")]
+    [Header("--- Camera Control Setting ---")]
     public Camera playerCamera;
     
     [Space(10)]
@@ -72,18 +72,25 @@ public class UserControlManager : MonoBehaviour
     public float fovMin = 30f;
     public float fovMax = 80f;
 
-    [Header("Camera Collider Setting")]
+    [Header("--- Camera Collider Setting ---")]
     public bool enableCollider;
     public float wallBoundValue = 0.5f;
 
-    [Header("Ground Standing Setting")]
+    [Header("--- Ground Standing Setting ---")]
     public bool enableGroundStanding;
     public bool stayHeightOnNoGround = true;
     public float heightFromGround = 1.7f;
     public float groundHeightTolerance = 0.05f; // 地面からの高さに対する許容誤差
     public float upLiftScale = 0.1f;            // 地面からの高さまで座標を高くする際に急に飛び出したようにしないための移動倍率
 
-    [Header("Tags")]
+    [Header("--- World Position Limit Setting ---")]
+    public bool enableWorldPositionLimit = false;
+    public float worldLimitMinX = -1000f;
+    public float worldLimitMaxX = 1000f;
+    public float worldLimitMinZ = -1000f;
+    public float worldLimitMaxZ = 1000f;
+
+    [Header("--- Tags ---")]
     public string controllableObjectTag = "ControllableObject";
     public string movePointObjectTag = "MovePointObject";
     public string popupEventObjectTag = "PopupEventObject";
@@ -619,7 +626,8 @@ public class UserControlManager : MonoBehaviour
             {
                 // 位置を更新
                 // 移動ポイントへ移動するとき以外は移動後に他のオブジェクトに衝突するかどうかをチェックし、衝突する場合は現在の場所を目的地にする
-                if (controlState != ControlState.MoveToPoint && enableCollider && CheckPlayerIsGoingToCollide(cameraPosition - transform.position, true))
+                if ((controlState != ControlState.MoveToPoint && enableCollider && CheckPlayerIsGoingToCollide(cameraPosition - transform.position, true)) ||
+                    CheckWorldPositionLimitOver())
                 {
                     cameraPosition = transform.position;
                 }
@@ -990,6 +998,22 @@ public class UserControlManager : MonoBehaviour
         else if (cameraAngle.x < 270f && !(cameraAngle.x >= 0f && cameraAngle.x <= 180f))
         {
             cameraAngle.x = 270f;
+        }
+    }
+
+    /// <summary>
+    /// 次の目的地がワールド座標系の制限範囲を超えているかどうかチェックする
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckWorldPositionLimitOver()
+    {
+        if (enableWorldPositionLimit)
+        {
+            return (cameraPosition.x > worldLimitMaxX || cameraPosition.x < worldLimitMinX || cameraPosition.z > worldLimitMaxZ || cameraPosition.z < worldLimitMinZ);
+        }
+        else
+        {
+            return false;
         }
     }
 

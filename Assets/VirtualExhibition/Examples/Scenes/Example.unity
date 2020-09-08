@@ -7446,7 +7446,7 @@ PrefabInstance:
     - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
       propertyPath: clickMoveType
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
@@ -7542,6 +7542,31 @@ PrefabInstance:
         type: 3}
       propertyPath: stayHeightOnNoGround
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: enableWorldPositionLimit
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: worldLimitMinX
+      value: -15
+      objectReference: {fileID: 0}
+    - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: worldLimitMaxX
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: worldLimitMinZ
+      value: -15
+      objectReference: {fileID: 0}
+    - target: {fileID: 590215613345901407, guid: e54fbb08e561f2148915202e403e23e3,
+        type: 3}
+      propertyPath: worldLimitMaxZ
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 9203226130226211491, guid: e54fbb08e561f2148915202e403e23e3,
         type: 3}
