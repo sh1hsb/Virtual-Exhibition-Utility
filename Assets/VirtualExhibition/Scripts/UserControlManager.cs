@@ -121,6 +121,14 @@ public class UserControlManager : MonoBehaviour
     #endregion
 
     #region Properties
+    public Vector3 CameraPosition
+    {
+        get
+        {
+            return cameraPosition;
+        }
+    }
+
     public bool IsEventInvoked
     {
         get
@@ -724,6 +732,9 @@ public class UserControlManager : MonoBehaviour
     #endregion
 
     #region Public Methods
+    /// <summary>
+    /// 状態のリセット
+    /// </summary>
     public void ResetState()
     {
         controlState = ControlState.None;
@@ -731,6 +742,10 @@ public class UserControlManager : MonoBehaviour
         currentPopupEvent = null;
     }
 
+    /// <summary>
+    /// 指定した地点へカメラを移動する(即時)
+    /// </summary>
+    /// <param name="position"></param>
     public void WarpTo(Vector3 position)
     {
         if (playerCamera != null)
@@ -740,12 +755,150 @@ public class UserControlManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 指定した地点へカメラを移動する
+    /// </summary>
+    /// <param name="position"></param>
     public void MoveTo(Vector3 position)
     {
         if (playerCamera != null)
         {
             controlState = ControlState.MoveToPoint;
             cameraPosition = position;
+        }
+    }
+
+    /// <summary>
+    /// カメラ位置に差分を追加
+    /// </summary>
+    /// <param name="delta"></param>
+    public void AddCameraPosition(Vector3 delta)
+    {
+        if (playerCamera != null)
+        {
+            cameraPosition += delta;
+        }
+    }
+
+    /// <summary>
+    /// クリックして自由移動する動作をエミュレート
+    /// </summary>
+    public void ClickFreewalkEmulate()
+    {
+        if (playerCamera != null)
+        {
+            controlState = ControlState.CameraControl;
+            cameraPosition += new Vector3(transform.forward.x, 0f, transform.forward.z) * moveRate;
+        }
+    }
+
+    /// <summary>
+    /// 正面方向へカメラを移動する
+    /// </summary>
+    public void ForwardMove(float magnification = 0.1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraPosition += new Vector3(transform.forward.x, 0f, transform.forward.z) * moveRate * magnification;
+        }
+    }
+
+    /// <summary>
+    /// 背面方向へカメラを移動する
+    /// </summary>
+    public void BackMove(float magnification = 0.1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraPosition -= new Vector3(transform.forward.x, 0f, transform.forward.z) * moveRate * magnification;
+        }
+    }
+
+    /// <summary>
+    /// 左方向へカメラを移動する
+    /// </summary>
+    public void LeftMove(float magnification = 0.1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraPosition -= new Vector3(transform.right.x, 0f, transform.right.z) * moveRate * magnification;
+        }
+    }
+
+    /// <summary>
+    /// 右方向へカメラを移動する
+    /// </summary>
+    public void RightMove(float magnification = 0.1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraPosition += new Vector3(transform.right.x, 0f, transform.right.z) * moveRate * magnification;
+        }
+    }
+
+    /// <summary>
+    /// カメラを反時計回りに回転する
+    /// </summary>
+    /// <param name="magnification"></param>
+    public void CounterClockwiseRotate(float magnification = 1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraAngle.y = transform.localEulerAngles.y - rotationSpeed.y * magnification;
+
+            // オブジェクトに回転を適用
+            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, cameraAngle.y, transform.localEulerAngles.z);
+        }
+    }
+
+    /// <summary>
+    /// カメラを時計回りに回転する
+    /// </summary>
+    /// <param name="magnification"></param>
+    public void ClockwiseRotate(float magnification = 1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraAngle.y = transform.localEulerAngles.y + rotationSpeed.y * magnification;
+
+            // オブジェクトに回転を適用
+            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, cameraAngle.y, transform.localEulerAngles.z);
+        }
+    }
+
+    /// <summary>
+    /// カメラを上方向に回転する
+    /// </summary>
+    /// <param name="magnification"></param>
+    public void LookUpRotate(float magnification = 1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraAngle.x = playerCamera.transform.localEulerAngles.x - rotationSpeed.x * magnification;
+
+            // カメラのx軸の角度をチェック
+            CheckCameraXAngle();
+
+            // オブジェクトに回転を適用
+            playerCamera.transform.localEulerAngles = new Vector3(cameraAngle.x, playerCamera.transform.localEulerAngles.y, playerCamera.transform.localEulerAngles.z);
+        }
+    }
+
+    /// <summary>
+    /// カメラを上方向に回転する
+    /// </summary>
+    /// <param name="magnification"></param>
+    public void LookDownRotate(float magnification = 1f)
+    {
+        if (playerCamera != null)
+        {
+            cameraAngle.x = playerCamera.transform.localEulerAngles.x + rotationSpeed.x * magnification;
+
+            // カメラのx軸の角度をチェック
+            CheckCameraXAngle();
+
+            // オブジェクトに回転を適用
+            playerCamera.transform.localEulerAngles = new Vector3(cameraAngle.x, playerCamera.transform.localEulerAngles.y, playerCamera.transform.localEulerAngles.z);
         }
     }
     #endregion
