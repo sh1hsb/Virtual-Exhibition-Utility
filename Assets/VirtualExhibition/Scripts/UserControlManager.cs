@@ -396,8 +396,8 @@ public class UserControlManager : MonoBehaviour
                         case ControlState.MoveToPoint:
 
                             // カーソルの位置から回転量を計算
-                            cameraAngle.y += (reverseRotationHorizontal ? -1 : 1) * (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
-                            cameraAngle.x += (reverseRotationVertical ? -1 : 1) * (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
+                            cameraAngle.y += (reverseRotationHorizontal ? -1 : 1) * (lastMousePosition.x - cursorPosition.x) * rotationSpeed.x;
+                            cameraAngle.x += (reverseRotationVertical ? -1 : 1) * (cursorPosition.y - lastMousePosition.y) * rotationSpeed.y;
 
                             // カメラのx軸の角度をチェック
                             CheckCameraXAngle();
@@ -410,8 +410,8 @@ public class UserControlManager : MonoBehaviour
                         case ControlState.ObjectControl:
 
                             // カーソルの位置から回転量を計算
-                            objectAngle.y += (lastMousePosition.x - cursorPosition.x) * rotationSpeed.y;
-                            objectAngle.x += (cursorPosition.y - lastMousePosition.y) * rotationSpeed.x;
+                            objectAngle.y += (lastMousePosition.x - cursorPosition.x) * rotationSpeed.x;
+                            objectAngle.x += (cursorPosition.y - lastMousePosition.y) * rotationSpeed.y;
 
                             // オブジェクトに回転を適用
                             hitTransform.localEulerAngles = objectAngle;
@@ -852,7 +852,7 @@ public class UserControlManager : MonoBehaviour
     {
         if (playerCamera != null)
         {
-            cameraAngle.y = transform.localEulerAngles.y - rotationSpeed.y * magnification;
+            cameraAngle.y = transform.localEulerAngles.y - rotationSpeed.x * magnification;
 
             // オブジェクトに回転を適用
             transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, cameraAngle.y, transform.localEulerAngles.z);
@@ -867,7 +867,7 @@ public class UserControlManager : MonoBehaviour
     {
         if (playerCamera != null)
         {
-            cameraAngle.y = transform.localEulerAngles.y + rotationSpeed.y * magnification;
+            cameraAngle.y = transform.localEulerAngles.y + rotationSpeed.x * magnification;
 
             // オブジェクトに回転を適用
             transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, cameraAngle.y, transform.localEulerAngles.z);
@@ -882,7 +882,7 @@ public class UserControlManager : MonoBehaviour
     {
         if (playerCamera != null)
         {
-            cameraAngle.x = playerCamera.transform.localEulerAngles.x - rotationSpeed.x * magnification;
+            cameraAngle.x = playerCamera.transform.localEulerAngles.x - rotationSpeed.y * magnification;
 
             // カメラのx軸の角度をチェック
             CheckCameraXAngle();
@@ -900,7 +900,7 @@ public class UserControlManager : MonoBehaviour
     {
         if (playerCamera != null)
         {
-            cameraAngle.x = playerCamera.transform.localEulerAngles.x + rotationSpeed.x * magnification;
+            cameraAngle.x = playerCamera.transform.localEulerAngles.x + rotationSpeed.y * magnification;
 
             // カメラのx軸の角度をチェック
             CheckCameraXAngle();
