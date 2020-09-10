@@ -99,7 +99,6 @@ public class UserControlManager : MonoBehaviour
     #region Private Fields
     private Vector3 cameraPosition;
     private Vector2 cameraAngle;
-    private Vector2 objectAngle;
     private Vector2 initialMousePosition;
     private Vector2 lastMousePosition;
     private Quaternion cameraPose;
@@ -123,6 +122,11 @@ public class UserControlManager : MonoBehaviour
     private Vector3 colliderCenter;
     private int colliderDirection = -1;
     private Vector3 capsuleSpherePos;
+
+
+    private Transform currentControllableObjectTransform;
+    private Vector2 controllableObjectAngle;
+    private Quaternion initialControllableObjectRotation;
 
     private Vector3 nextMoveDirection;
     #endregion
@@ -314,7 +318,9 @@ public class UserControlManager : MonoBehaviour
                             if (hitTransform.CompareTag(controllableObjectTag))
                             {
                                 controlState = ControlState.ObjectControl;
-                                objectAngle = hitTransform.localEulerAngles;
+                                currentControllableObjectTransform = hitTransform;
+                                controllableObjectAngle = new Vector2(0f, 0f);
+                                initialControllableObjectRotation = hitTransform.rotation;
                             }
                             // "MovePointObject"
                             else if (hitTransform.CompareTag(movePointObjectTag))
@@ -410,11 +416,15 @@ public class UserControlManager : MonoBehaviour
                         case ControlState.ObjectControl:
 
                             // カーソルの位置から回転量を計算
-                            objectAngle.y += (lastMousePosition.x - cursorPosition.x) * rotationSpeed.x;
-                            objectAngle.x += (cursorPosition.y - lastMousePosition.y) * rotationSpeed.y;
+                            controllableObjectAngle.y += (lastMousePosition.x - cursorPosition.x) * rotationSpeed.x;
+                            controllableObjectAngle.x += (cursorPosition.y - lastMousePosition.y) * rotationSpeed.y;
+
+                            // マウスの操作方向とオブジェクトが回転する方向がそろうように座標変換
+                            // クリックしたときのオブジェクト正面がカーソルの方を向くようなイメージになる
+                            Vector3 rot = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, 0) * new Vector3(controllableObjectAngle.x, controllableObjectAngle.y, 0f);
 
                             // オブジェクトに回転を適用
-                            hitTransform.localEulerAngles = objectAngle;
+                            currentControllableObjectTransform.rotation = Quaternion.Euler(rot) * initialControllableObjectRotation;
                             break;
 
                         default:
@@ -544,6 +554,10 @@ public class UserControlManager : MonoBehaviour
                             {
                                 controlState = ControlState.None;
                             }
+                            break;
+
+                        case ControlState.ObjectControl:
+
                             break;
 
                         default:
