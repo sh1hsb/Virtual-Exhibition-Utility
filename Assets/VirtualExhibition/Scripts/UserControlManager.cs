@@ -1034,6 +1034,7 @@ public class UserControlManager : MonoBehaviour
     /// <summary>
     /// タグを登録する
     /// </summary>
+    #if UNITY_EDITOR
     public void RegisterTags(bool onStart)
     {
         Object[] asset = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset");
@@ -1080,5 +1081,6 @@ public class UserControlManager : MonoBehaviour
             }
         }
     }
+    #endif
     #endregion
 }
